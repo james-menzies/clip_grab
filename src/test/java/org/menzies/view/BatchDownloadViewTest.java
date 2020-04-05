@@ -28,7 +28,7 @@ public class BatchDownloadViewTest  {
     public void before() {
 
         workers = new ArrayList<>();
-        workers.addAll(ADWFactory.get(10));
+        workers.addAll(ADWFactory.get(50000));
 
         service = new ThreadPoolExecutor(5, 5, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>()) {
             @Override
@@ -37,12 +37,6 @@ public class BatchDownloadViewTest  {
                 getQueue().clear();
             }
         };
-
-
-
-
-
-
     }
 
 

@@ -68,6 +68,7 @@ public final class NodeListDisplay<T> {
 
         if (viewModelReference.containsKey(viewModel)) {
             dropIn.getChildren().remove(viewModelReference.get(viewModel));
+            viewModelReference.remove(viewModel);
         }
         else System.err.println("Requested view model does not exist.");
     }

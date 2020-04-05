@@ -55,7 +55,7 @@ public class BatchDownloadView implements View<BatchDownloadVM> {
 
         URL url = getClass().getResource("/DownloadTile.fxml");
         var display = new NodeListDisplay<DownloadTileVM>
-                (url, dropInForDownloads, viewModel.activeListProperty());
+                (url, dropInForDownloads, viewModel.runningViewModelsProperty());
 
         downloadTotal.setText(String.valueOf(viewModel.downloadTotalProperty().get()));
         failedTotal.textProperty().bind(Bindings.convert(viewModel.failedTotalProperty()));
@@ -68,13 +68,11 @@ public class BatchDownloadView implements View<BatchDownloadVM> {
         status.textProperty().bind(viewModel.statusProperty());
 
 
-        startButton.setOnAction(event -> viewModel.handleStart());
+        startButton.setOnAction(event -> {
+            viewModel.handleStart();
+        });
         shutdownButton.setOnAction(event -> {
-            try {
-                viewModel.handleShutDown();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            viewModel.handleShutDown();
         });
         hardShutdownButton.setOnAction(event -> viewModel.handleHardShutDown());
 

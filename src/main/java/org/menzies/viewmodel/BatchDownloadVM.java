@@ -1,32 +1,30 @@
 package org.menzies.viewmodel;
 
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerBinding;
-import javafx.beans.binding.ListBinding;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.concurrent.Worker;
-import javafx.concurrent.WorkerStateEvent;
-import javafx.event.EventHandler;
-import javafx.util.Callback;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 public class BatchDownloadVM <T extends Task<?>> {
 
 
     private final ExecutorService service;
     private final Iterator<T> pendingTasks;
-    private final ObservableList<T> submittedTasks;
-    private final ObservableList<DownloadTileVM> activeList;
+    private final ObservableList<DownloadTileVM> runningViewModels;
+    private final Map<T, DownloadTileVM> taskToVMReference;
+
+    private final IntegerProperty totalActivated;
+    private final IntegerBinding currentlyActivated;
 
     private final ObservableList<String> downloadLog;
     private final ReadOnlyIntegerWrapper downloadTotal;
@@ -42,6 +40,7 @@ public class BatchDownloadVM <T extends Task<?>> {
     private final String SHUTTING_DOWN = "Program terminating after active downloads complete.";
     private final String COMPLETE = "All downloads complete";
     private final String USER_TERMINATED = "Program terminated by user.";
+    private final int MINIMUM_ACTIVATED = 10;
 
     public BatchDownloadVM(ExecutorService service, List<T> tasks)  {
 
@@ -49,40 +48,28 @@ public class BatchDownloadVM <T extends Task<?>> {
         pendingTasks = tasks.iterator();
         downloadLog = FXCollections.observableArrayList();
 
-        submittedTasks = initializeSubmittedTasks();
-        activeList = initializeActiveList();
+        runningViewModels = FXCollections.observableArrayList();
+        taskToVMReference = FXCollections.observableHashMap();
 
-        downloadTotal = new ReadOnlyIntegerWrapper();
-        downloadTotal.set(tasks.size());
-
-        completedTotal = new ReadOnlyIntegerWrapper();
-        completedTotal.set(0);
-
-        failedTotal = new ReadOnlyIntegerWrapper();
-        failedTotal.set(0);
-
+        downloadTotal = new ReadOnlyIntegerWrapper(tasks.size());
+        completedTotal = new ReadOnlyIntegerWrapper(0);
+        failedTotal = new ReadOnlyIntegerWrapper(0);
         remainingTotal = (IntegerBinding) Bindings.subtract(downloadTotal,
                 Bindings.add(completedTotal, failedTotal));
 
+        totalActivated = new SimpleIntegerProperty(0);
+        currentlyActivated = initializeCurrentlyActivated();
 
         startDisabled = new ReadOnlyBooleanWrapper(false);
         shutDownDisabled = new ReadOnlyBooleanWrapper(true);
         hardShutDownDisabled = new ReadOnlyBooleanWrapper(true);
         status = new ReadOnlyStringWrapper("Press start to download");
-
-
-        addCompletionListener(service);
-        submittedTasks.addListener(this::ensureSubmittedTasksSize);
     }
 
-    private void ensureSubmittedTasksSize(ListChangeListener.Change<? extends T> change)  {
+    private IntegerBinding initializeCurrentlyActivated() {
 
-        while (change.next()) {
-            if (change.getList().size() <= 10) {
-                activatePendingTasks(10);
-                System.out.println("10 tasks added for submission");
-            }
-        }
+        return (IntegerBinding) Bindings.subtract(totalActivated,
+                Bindings.add(completedTotal, failedTotal));
     }
 
     private void addCompletionListener(ExecutorService service) {
@@ -101,66 +88,79 @@ public class BatchDownloadVM <T extends Task<?>> {
         service.shutdown();
     }
 
-    private ListBinding<DownloadTileVM> initializeActiveList() {
-        return new ListBinding<DownloadTileVM>() {
-            {
-                super.bind(submittedTasks);
-            }
 
-            @Override
-            protected ObservableList<DownloadTileVM> computeValue() {
-                List<DownloadTileVM> target = submittedTasks.stream()
-                        .filter( worker -> worker.getState() == Worker.State.RUNNING)
-                        .map(DownloadTileVM::new)
-                        .collect(Collectors.toUnmodifiableList());
+    private void ensureActivatedSize(ObservableValue<? extends Number> value,
+                                     Number oldValue, Number newValue) {
 
-                return FXCollections.observableList(target);
-            }
-        };
+        if (newValue.intValue() < MINIMUM_ACTIVATED &&
+                remainingTotal.get() > MINIMUM_ACTIVATED) {
+            activatePendingTasks(10);
+        }
+
     }
 
-    private ObservableList<T> initializeSubmittedTasks() {
-
-        Callback<T, Observable[]> extractor =
-                worker -> new Observable[] {worker.stateProperty()};
-
-        return FXCollections.observableArrayList(extractor);
-    }
 
     private void activatePendingTasks(int amount) {
 
         for (int i=0; i < amount; i++) {
             T task = pendingTasks.next();
             service.submit(task);
-            submittedTasks.add(task);
-            task.setOnFailed(e -> onTaskCompletion(task));
-            task.setOnSucceeded(e -> onTaskCompletion(task));
-            task.setOnCancelled(e -> onTaskCompletion(task));
+            task.setOnRunning(e -> prepareVMGeneration(task));
+            task.setOnFailed(e -> cleanUpTask(task, false));
+            task.setOnSucceeded(e -> cleanUpTask(task, true));
+            task.setOnCancelled(e -> cleanUpTask(task, false));
         }
+
+        totalActivated.set(totalActivated.get() + amount);
+    }
+
+    private void prepareVMGeneration(T task) {
+
+        var viewModel = new DownloadTileVM(task);
+        taskToVMReference.put(task, viewModel);
+        runningViewModels.add(viewModel);
+    }
+
+    private void cleanUpTask(T task, boolean succeeded) {
+
+        onTaskCompletion(task);
+        if (succeeded) {
+            completedTotal.set(completedTotal.get() + 1);
+        }
+        else failedTotal.set(failedTotal.get() + 1);
+
+        runningViewModels.remove(taskToVMReference.remove(task));
+
     }
 
     private void onTaskCompletion(T task) {
 
         downloadLog.add(task.getMessage());
-        submittedTasks.remove(task);
+        task.setOnRunning(null);
+        task.setOnFailed(null);
+        task.setOnSucceeded(null);
+        task.setOnCancelled(null);
+
     }
 
-    public void handleStart() throws InterruptedException {
+    public void handleStart()  {
 
         startDisabled.set(true);
         shutDownDisabled.set(false);
         hardShutDownDisabled.set(false);
         status.set("Downloading");
         activatePendingTasks(20);
+        currentlyActivated.addListener(this::ensureActivatedSize);
+        addCompletionListener(service);
     }
 
-    public void handleShutDown() throws InterruptedException {
+    public void handleShutDown()  {
 
         shutDownDisabled.set(true);
         status.set(SHUTTING_DOWN);
         service.shutdown();
 
-        Bindings.size(activeList).addListener( (v, o, n) -> {
+        Bindings.size(runningViewModels).addListener( (v, o, n) -> {
             if (n.intValue() == 0) {
                 hardShutDownDisabled.set(true);
                 status.set(USER_TERMINATED);
@@ -177,8 +177,8 @@ public class BatchDownloadVM <T extends Task<?>> {
     }
 
 
-    public ObservableList<DownloadTileVM> activeListProperty() {
-        return activeList;
+    public ObservableList<DownloadTileVM> runningViewModelsProperty() {
+        return runningViewModels;
     }
 
     public ReadOnlyIntegerProperty downloadTotalProperty() {

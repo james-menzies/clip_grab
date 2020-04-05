@@ -9,12 +9,14 @@ public class DownloadTileVM {
 
     private ReadOnlyStringWrapper downloadInfo;
     private ReadOnlyDoubleWrapper progress;
-    private Worker<?> worker;
 
     public DownloadTileVM(Worker<?> worker) {
 
         progress = new ReadOnlyDoubleWrapper();
         progress.bind(worker.progressProperty());
+
+
+
 
         downloadInfo = new ReadOnlyStringWrapper();
         downloadInfo.bind(Bindings.when(Bindings.equal(progress, 1.0, 0.0001))
@@ -22,6 +24,10 @@ public class DownloadTileVM {
                 .otherwise(Bindings.format("%s (%.2fMB of %.2fMB)",
                         worker.messageProperty(), worker.workDoneProperty(),
                         worker.totalWorkProperty())));
+
+
+
+
     }
 
     public ReadOnlyDoubleProperty progressProperty() {
@@ -32,7 +38,4 @@ public class DownloadTileVM {
         return downloadInfo.getReadOnlyProperty();
     }
 
-    public void handleStop() {
-        worker.cancel();
-    }
 }

@@ -27,16 +27,12 @@ public class Director {
 
     public void start() throws IOException {
 
- /*       workerList = flow
-                .startNewFlow(rootDir)
-                .generateWorkers();
-*/
+
         service = flow.getService();
 
 
         var viewModel = new BatchDownloadVM(service, workerList);
         changeScene(viewModel, "/BatchDownload.fxml");
-        viewModel.handleStart();
 
 
     }
