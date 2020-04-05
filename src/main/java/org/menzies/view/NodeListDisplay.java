@@ -7,7 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
-import org.menzies.view.View;
+
 
 import java.io.IOException;
 import java.net.URL;
@@ -51,7 +51,7 @@ public final class NodeListDisplay<T> {
         Parent targetNode;
 
         try {
-            targetNode = (Parent) loader.load();
+            targetNode = loader.load();
         } catch (IOException | IllegalStateException e) {
             targetNode = new Label("Error when loading from fxml");
             dropIn.getChildren().add(targetNode);
