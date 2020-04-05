@@ -9,6 +9,11 @@ public class DownloadTileVM {
 
     private ReadOnlyStringWrapper downloadInfo;
     private ReadOnlyDoubleWrapper progress;
+    private ReadOnlyBooleanWrapper failed;
+
+    public ReadOnlyBooleanProperty failedProperty() {
+        return failed.getReadOnlyProperty();
+    }
 
     public DownloadTileVM(Worker<?> worker) {
 
@@ -25,6 +30,13 @@ public class DownloadTileVM {
                         worker.messageProperty(), worker.workDoneProperty(),
                         worker.totalWorkProperty())));
 
+
+        failed = new ReadOnlyBooleanWrapper(false);
+
+        failed.bind(Bindings.createBooleanBinding( () -> {
+
+            return worker.getState() == Worker.State.FAILED;
+        }, worker.stateProperty()));
 
 
 

@@ -3,13 +3,12 @@ package org.menzies.viewmodel;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +48,8 @@ public class BatchDownloadVM <T extends Task<?>> {
         downloadLog = FXCollections.observableArrayList();
 
         runningViewModels = FXCollections.observableArrayList();
-        taskToVMReference = FXCollections.observableHashMap();
 
+        taskToVMReference = new HashMap<>();
         downloadTotal = new ReadOnlyIntegerWrapper(tasks.size());
         completedTotal = new ReadOnlyIntegerWrapper(0);
         failedTotal = new ReadOnlyIntegerWrapper(0);
@@ -72,40 +71,23 @@ public class BatchDownloadVM <T extends Task<?>> {
                 Bindings.add(completedTotal, failedTotal));
     }
 
-    private void addCompletionListener(ExecutorService service) {
-
-        remainingTotal.addListener((observable, oldValue, newValue) -> {
-                    if (newValue.intValue() == 0) {
-                        performCompletionOperation();
-                    }
-                });
+    public void handleStart()  {
+        startDisabled.set(true);
+        shutDownDisabled.set(false);
+        hardShutDownDisabled.set(false);
+        status.set("Downloading");
+        activatePendingTasks(20);
+        currentlyActivated.addListener(this::onCurrentlyActivatedChange);
+        addCompletionListener();
     }
-
-    private void performCompletionOperation() {
-        status.set(COMPLETE);
-        shutDownDisabled.set(true);
-        hardShutDownDisabled.set(true);
-        service.shutdown();
-    }
-
-
-    private void ensureActivatedSize(ObservableValue<? extends Number> value,
-                                     Number oldValue, Number newValue) {
-
-        if (newValue.intValue() < MINIMUM_ACTIVATED &&
-                remainingTotal.get() > MINIMUM_ACTIVATED) {
-            activatePendingTasks(10);
-        }
-
-    }
-
 
     private void activatePendingTasks(int amount) {
 
         for (int i=0; i < amount; i++) {
             T task = pendingTasks.next();
+            pendingTasks.remove();
             service.submit(task);
-            task.setOnRunning(e -> prepareVMGeneration(task));
+            task.setOnRunning(e -> createViewModel(task));
             task.setOnFailed(e -> cleanUpTask(task, false));
             task.setOnSucceeded(e -> cleanUpTask(task, true));
             task.setOnCancelled(e -> cleanUpTask(task, false));
@@ -114,28 +96,23 @@ public class BatchDownloadVM <T extends Task<?>> {
         totalActivated.set(totalActivated.get() + amount);
     }
 
-    private void prepareVMGeneration(T task) {
+    private void createViewModel(T task) {
 
         var viewModel = new DownloadTileVM(task);
         taskToVMReference.put(task, viewModel);
         runningViewModels.add(viewModel);
     }
 
-    private void cleanUpTask(T task, boolean succeeded) {
+    private void cleanUpTask(T task, boolean success) {
 
-        onTaskCompletion(task);
-        if (succeeded) {
-            completedTotal.set(completedTotal.get() + 1);
-        }
-        else failedTotal.set(failedTotal.get() + 1);
-
+        downloadLog.add(0, task.getMessage());
+        removeTaskListeners(task);
+        updateTotals(success);
         runningViewModels.remove(taskToVMReference.remove(task));
-
     }
 
-    private void onTaskCompletion(T task) {
+    private void removeTaskListeners(T task) {
 
-        downloadLog.add(task.getMessage());
         task.setOnRunning(null);
         task.setOnFailed(null);
         task.setOnSucceeded(null);
@@ -143,16 +120,31 @@ public class BatchDownloadVM <T extends Task<?>> {
 
     }
 
-    public void handleStart()  {
-
-        startDisabled.set(true);
-        shutDownDisabled.set(false);
-        hardShutDownDisabled.set(false);
-        status.set("Downloading");
-        activatePendingTasks(20);
-        currentlyActivated.addListener(this::ensureActivatedSize);
-        addCompletionListener(service);
+    private void updateTotals(boolean success) {
+        if (success) {
+            completedTotal.set(completedTotal.get() + 1);
+        }
+        else failedTotal.set(failedTotal.get() + 1);
     }
+
+    private void onCurrentlyActivatedChange(ObservableValue<? extends Number> value,
+                                            Number oldValue, Number newValue) {
+
+        if (newValue.intValue() < MINIMUM_ACTIVATED &&
+                remainingTotal.get() > MINIMUM_ACTIVATED) {
+            activatePendingTasks(10);
+        }
+    }
+
+    private void addCompletionListener() {
+
+        remainingTotal.addListener((observable, oldValue, newValue) -> {
+                    if (newValue.intValue() == 0) {
+                        end(COMPLETE);
+                    }
+                });
+    }
+
 
     public void handleShutDown()  {
 
@@ -162,18 +154,22 @@ public class BatchDownloadVM <T extends Task<?>> {
 
         Bindings.size(runningViewModels).addListener( (v, o, n) -> {
             if (n.intValue() == 0) {
-                hardShutDownDisabled.set(true);
-                status.set(USER_TERMINATED);
+                end(USER_TERMINATED);
             }
         });
     }
 
     public void handleHardShutDown() {
 
+        end(USER_TERMINATED);
+    }
+
+    private void end(String status) {
+
         shutDownDisabled.set(true);
         hardShutDownDisabled.set(true);
         service.shutdownNow();
-        status.set(USER_TERMINATED);
+        this.status.set(status);
     }
 
 

@@ -18,11 +18,6 @@ public class DownloadTileView implements View<DownloadTileVM> {
     @FXML
     Label downloadText;
 
-    @FXML
-    Button pauseButton;
-
-    @FXML
-    Button stopButton;
 
 
     @Override
@@ -39,6 +34,11 @@ public class DownloadTileView implements View<DownloadTileVM> {
 
         progressBar.progressProperty().bind(viewModel.progressProperty());
         downloadText.textProperty().bind(viewModel.downloadInfoProperty());
+        viewModel.failedProperty().addListener( (observable, oldValue, newValue) -> {
+            if (newValue) {
+                progressBar.setStyle("-fx-accent: red;");
+            }
+        });
     }
 
 

@@ -1,5 +1,7 @@
 package org.menzies.view;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.TranslateTransition;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
@@ -7,6 +9,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
+import javafx.util.Duration;
 
 
 import java.io.IOException;
@@ -67,8 +70,19 @@ public final class NodeListDisplay<T> {
     private void removeNode(T viewModel) {
 
         if (viewModelReference.containsKey(viewModel)) {
-            dropIn.getChildren().remove(viewModelReference.get(viewModel));
-            viewModelReference.remove(viewModel);
+
+            Node target = viewModelReference.remove(viewModel);
+
+            FadeTransition ft = new FadeTransition(Duration.millis(400), target);
+            ft.setFromValue(1.0);
+            ft.setToValue(0);
+            ft.setCycleCount(1);
+            ft.setAutoReverse(true);
+
+            ft.play();
+
+            ft.setOnFinished(e -> dropIn.getChildren().remove(target));
+            ;
         }
         else System.err.println("Requested view model does not exist.");
     }

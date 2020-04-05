@@ -14,7 +14,7 @@ public class ADWFactory {
             String title = "Download #" + (i + 1);
             long length = (long) (Math.random() * 10000L);
 
-            boolean fail = Math.random() < 0.05;
+            boolean fail = Math.random() < 0.5;
 
             var worker = new AutomaticDummyWorker(title, length, fail);
 

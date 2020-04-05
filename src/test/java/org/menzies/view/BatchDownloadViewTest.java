@@ -30,7 +30,8 @@ public class BatchDownloadViewTest  {
         workers = new ArrayList<>();
         workers.addAll(ADWFactory.get(50000));
 
-        service = new ThreadPoolExecutor(5, 5, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>()) {
+        service = new ThreadPoolExecutor(5, 5, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
+                                                    new ThreadPoolExecutor.DiscardPolicy()) {
             @Override
             public void shutdown() {
                 super.shutdown();
