@@ -15,6 +15,7 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.util.Callback;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -23,36 +24,36 @@ public class BatchDownloadVM <T extends Task<?>> {
 
 
     private final ExecutorService service;
-    private final BlockingQueue<T> pendingTasks;
+    private final Iterator<T> pendingTasks;
     private final ObservableList<T> submittedTasks;
     private final ObservableList<DownloadTileVM> activeList;
-    private final ListChangeListener<T> activeListRepopulation;
+
     private final ObservableList<String> downloadLog;
     private final ReadOnlyIntegerWrapper downloadTotal;
     private final ReadOnlyIntegerWrapper completedTotal;
     private final ReadOnlyIntegerWrapper failedTotal;
     private final IntegerBinding remainingTotal;
+
     private final ReadOnlyStringWrapper status;
     private final ReadOnlyBooleanWrapper startDisabled;
     private final ReadOnlyBooleanWrapper shutDownDisabled;
     private final ReadOnlyBooleanWrapper hardShutDownDisabled;
+
     private final String SHUTTING_DOWN = "Program terminating after active downloads complete.";
     private final String COMPLETE = "All downloads complete";
     private final String USER_TERMINATED = "Program terminated by user.";
 
-
-
-    public BatchDownloadVM(ExecutorService service, BlockingQueue<T> pendingTasks) {
+    public BatchDownloadVM(ExecutorService service, List<T> tasks)  {
 
         this.service = service;
-        this.pendingTasks = pendingTasks;
+        pendingTasks = tasks.iterator();
         downloadLog = FXCollections.observableArrayList();
 
         submittedTasks = initializeSubmittedTasks();
         activeList = initializeActiveList();
 
         downloadTotal = new ReadOnlyIntegerWrapper();
-        downloadTotal.set(pendingTasks.size());
+        downloadTotal.set(tasks.size());
 
         completedTotal = new ReadOnlyIntegerWrapper();
         completedTotal.set(0);
@@ -69,17 +70,19 @@ public class BatchDownloadVM <T extends Task<?>> {
         hardShutDownDisabled = new ReadOnlyBooleanWrapper(true);
         status = new ReadOnlyStringWrapper("Press start to download");
 
-        activeListRepopulation = onActiveListChange();
-
 
         addCompletionListener(service);
-
+        submittedTasks.addListener(this::ensureSubmittedTasksSize);
     }
 
-    private ListChangeListener<T> onActiveListChange() {
+    private void ensureSubmittedTasksSize(ListChangeListener.Change<? extends T> change)  {
 
-        
-
+        while (change.next()) {
+            if (change.getList().size() <= 10) {
+                activatePendingTasks(10);
+                System.out.println("10 tasks added for submission");
+            }
+        }
     }
 
     private void addCompletionListener(ExecutorService service) {
@@ -124,10 +127,10 @@ public class BatchDownloadVM <T extends Task<?>> {
         return FXCollections.observableArrayList(extractor);
     }
 
-    private void activatePendingTasks(int amount) throws InterruptedException {
+    private void activatePendingTasks(int amount) {
 
         for (int i=0; i < amount; i++) {
-            T task = pendingTasks.take();
+            T task = pendingTasks.next();
             service.submit(task);
             submittedTasks.add(task);
             task.setOnFailed(e -> onTaskCompletion(task));
@@ -139,7 +142,7 @@ public class BatchDownloadVM <T extends Task<?>> {
     private void onTaskCompletion(T task) {
 
         downloadLog.add(task.getMessage());
-        activeList.remove(task);
+        submittedTasks.remove(task);
     }
 
     public void handleStart() throws InterruptedException {
