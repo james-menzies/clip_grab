@@ -31,6 +31,10 @@ public class AutomaticDummyWorker extends Task<Void> {
 
         updateMessage(String.format(PROGRESS_MESSAGE, title));
 
+        updateProgress(-1, totalWork);
+
+        pause(2000);
+
         if (failTask) {
             executeLoop(totalWork/2);
             String failMessage = String.format(FAILED_MESSAGE, title);
@@ -42,12 +46,13 @@ public class AutomaticDummyWorker extends Task<Void> {
             executeLoop(totalWork);
             updateMessage(String.format(COMPLETED_MESSAGE, title));
         }
+        pause(200);
         return null;
     }
 
     private void executeLoop(long iterations) throws InterruptedException {
 
-        for (long i = 0; i < iterations; i++) {
+        for (long i = 1; i <= iterations; i++) {
 
             updateProgress(i, totalWork);
             pause(block);

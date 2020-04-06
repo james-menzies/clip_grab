@@ -8,14 +8,23 @@ import javafx.concurrent.Worker;
 public class DownloadTileVM {
 
     private ReadOnlyStringWrapper downloadInfo;
-    private ReadOnlyDoubleWrapper progress;
+    private ReadOnlyDoubleWrapper workDone;
+    private ReadOnlyDoubleWrapper total;
     private ReadOnlyBooleanWrapper failed;
+    private final long bytesInMb = 1_048_576;
+    private ReadOnlyDoubleWrapper progress;
 
     public ReadOnlyBooleanProperty failedProperty() {
         return failed.getReadOnlyProperty();
     }
 
     public DownloadTileVM(Worker<?> worker) {
+
+        workDone = new ReadOnlyDoubleWrapper();
+        total = new ReadOnlyDoubleWrapper();
+        workDone.bind(Bindings.divide(worker.workDoneProperty(), bytesInMb));
+        total.bind(Bindings.divide(worker.totalWorkProperty(), bytesInMb));
+
 
         progress = new ReadOnlyDoubleWrapper();
         progress.bind(worker.progressProperty());
@@ -24,11 +33,11 @@ public class DownloadTileVM {
 
 
         downloadInfo = new ReadOnlyStringWrapper();
-        downloadInfo.bind(Bindings.when(Bindings.equal(progress, 1.0, 0.0001))
+        downloadInfo.bind(Bindings.when(Bindings.and(worker.runningProperty(),
+                Bindings.lessThan(workDone, 0.0)))
                 .then(worker.messageProperty())
-                .otherwise(Bindings.format("%s (%.2fMB of %.2fMB)",
-                        worker.messageProperty(), worker.workDoneProperty(),
-                        worker.totalWorkProperty())));
+                .otherwise(Bindings.format("%s (%.1fMB of %.1fMB)",
+                        worker.messageProperty(), workDone, total)));
 
 
         failed = new ReadOnlyBooleanWrapper(false);

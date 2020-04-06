@@ -1,7 +1,6 @@
 package org.menzies.view;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import org.menzies.viewmodel.DownloadTileVM;

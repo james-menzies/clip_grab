@@ -36,10 +36,8 @@ public class BatchDownloadVM <T extends Task<?>> {
     private final ReadOnlyBooleanWrapper shutDownDisabled;
     private final ReadOnlyBooleanWrapper hardShutDownDisabled;
 
-    private final String SHUTTING_DOWN = "Program terminating after active downloads complete.";
     private final String COMPLETE = "All downloads complete";
     private final String USER_TERMINATED = "Program terminated by user.";
-    private final int MINIMUM_ACTIVATED = 10;
 
     public BatchDownloadVM(ExecutorService service, List<T> tasks)  {
 
@@ -106,19 +104,11 @@ public class BatchDownloadVM <T extends Task<?>> {
     private void cleanUpTask(T task, boolean success) {
 
         downloadLog.add(0, task.getMessage());
-        removeTaskListeners(task);
         updateTotals(success);
         runningViewModels.remove(taskToVMReference.remove(task));
     }
 
-    private void removeTaskListeners(T task) {
 
-        task.setOnRunning(null);
-        task.setOnFailed(null);
-        task.setOnSucceeded(null);
-        task.setOnCancelled(null);
-
-    }
 
     private void updateTotals(boolean success) {
         if (success) {
@@ -130,8 +120,9 @@ public class BatchDownloadVM <T extends Task<?>> {
     private void onCurrentlyActivatedChange(ObservableValue<? extends Number> value,
                                             Number oldValue, Number newValue) {
 
-        if (newValue.intValue() < MINIMUM_ACTIVATED &&
-                remainingTotal.get() > MINIMUM_ACTIVATED) {
+        int minimumActivated = 10;
+        if (newValue.intValue() < minimumActivated &&
+                remainingTotal.get() > minimumActivated) {
             activatePendingTasks(10);
         }
     }
@@ -145,11 +136,11 @@ public class BatchDownloadVM <T extends Task<?>> {
                 });
     }
 
-
     public void handleShutDown()  {
 
         shutDownDisabled.set(true);
-        status.set(SHUTTING_DOWN);
+        String shutDown = "Program terminating after active downloads complete.";
+        status.set(shutDown);
         service.shutdown();
 
         Bindings.size(runningViewModels).addListener( (v, o, n) -> {
@@ -171,7 +162,6 @@ public class BatchDownloadVM <T extends Task<?>> {
         service.shutdownNow();
         this.status.set(status);
     }
-
 
     public ObservableList<DownloadTileVM> runningViewModelsProperty() {
         return runningViewModels;
