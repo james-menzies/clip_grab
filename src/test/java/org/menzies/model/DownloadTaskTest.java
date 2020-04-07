@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.menzies.utils.JFXUtil;
 import org.menzies.viewmodel.DownloadTileVM;
 
+import java.io.File;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,7 +28,6 @@ public class DownloadTaskTest
 
 
         DownloadTask task = new DownloadTask("C://test/sample.wav" , url);
-
 
         ExecutorService service = Executors.newSingleThreadExecutor();
 

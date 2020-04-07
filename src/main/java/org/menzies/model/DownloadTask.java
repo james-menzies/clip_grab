@@ -7,117 +7,98 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.channels.Channel;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Consumer;
+
 
 public class DownloadTask extends Task<File> {
 
-    String fileDir;
-    String source;
-    CountDownLatch latch;
-    String fileName;
-    boolean failTask;
+    private File file;
+    private final String downloadLocation;
+    private final CountDownLatch latch;
+    private boolean failTask;
+    private final List<Consumer<File>> postDownloadFunctions;
+    private URLConnection conn;
+    private ReadableByteChannel inputChannel;
+    private FileChannel outputChannel;
 
-    File file;
-    URLConnection conn;
+    public DownloadTask(String fileDir, String downloadLocation) {
 
-    ReadableByteChannel inputChannel;
-    FileChannel outputChannel;
-
-    private static Pattern fileNameFinder =
-            Pattern.compile("\\w+.+\\w");
-
-
-
-    public DownloadTask(String fileDir, String source) {
-        this.fileDir = fileDir;
-        this.source = source;
-
-        Matcher matcher = fileNameFinder.matcher(fileDir);
-
-        matcher.find();
-        fileName = matcher.group();
+        file = new File(fileDir);
+        this.downloadLocation = downloadLocation;
+        postDownloadFunctions = new ArrayList<>();
+        latch = new CountDownLatch(2);
     }
-
 
 
     @Override
     protected File call() throws Exception {
+        //TODO Refactor method into smaller pieces
+        updateMessage("Initializing: " + file.getName());
 
-        updateMessage("Initializing: " + fileDir);
-        latch = new CountDownLatch(2);
-
-        Thread fileThread = new Thread ( () -> initializeFile());
+        Thread fileThread = new Thread(this::initializeFile);
         fileThread.start();
-        Thread connectionThread = new Thread ( () -> initializeURLConnection());
+        Thread connectionThread = new Thread(this::initializeURLConnection);
         connectionThread.start();
 
         latch.await();
 
-
-        if(failTask) {
+        if (failTask) {
             throw new Exception();
         }
 
-        ReadableByteChannel inputChannel = Channels.newChannel(conn.getInputStream());
-        FileChannel outputChannel = new FileOutputStream(file).getChannel();
-
         long totalSize = conn.getContentLength();
         long currentIndex = 0;
-        long packetSize = 2056;
-        int counter = 0;
+        long packetSize = 1024;
 
-
-        updateMessage(String.format("Downloading: %s", fileName));
+        updateMessage(String.format("Downloading: %s", file.getName()));
         while (currentIndex < totalSize) {
 
             outputChannel.transferFrom(inputChannel, currentIndex, packetSize);
-            updateProgress(outputChannel.size(),totalSize);
+            updateProgress(outputChannel.size(), totalSize);
 
-            counter++;
             currentIndex += packetSize;
         }
 
-        System.out.println("Counter: " + counter);
+        for (Consumer<File> operation : postDownloadFunctions) {
 
+            operation.accept(file);
+        }
         updateMessage("Download successful");
 
         inputChannel.close();
         outputChannel.close();
 
-        return  file;
+        return file;
     }
 
-    private void initializeURLConnection()  {
+    private void initializeURLConnection() {
 
 
         try {
-            conn = new URL(source).openConnection();
-        } catch (IOException|IllegalArgumentException e) {
-            updateMessage(String.format("Download of %s failed. Invalid URL.", fileName ));
+            conn = new URL(downloadLocation).openConnection();
+        } catch (IOException | IllegalArgumentException e) {
+            updateMessage(String.format("Download of %s failed. Invalid URL.", file.getName()));
             failTask = true;
         }
 
         try {
             inputChannel = Channels.newChannel(conn.getInputStream());
         } catch (IOException e) {
-            updateMessage(String.format("Download of %s failed. Could not find website.", fileName));
+            updateMessage(String.format("Download of %s failed. Could not find website.", file.getName()));
             failTask = true;
         } finally {
             latch.countDown();
         }
     }
 
-    private void initializeFile()  {
-
-        file = new File(fileDir);
-
+    private void initializeFile() {
+        //TODO This still feels prone to errors in read-only contexts
         if (file.exists()) {
             file.delete();
         }
@@ -127,19 +108,53 @@ public class DownloadTask extends Task<File> {
                 file.mkdirs();
             }
             file.createNewFile();
+            outputChannel = new FileOutputStream(file).getChannel();
 
         } catch (IOException e) {
-            updateMessage(String.format("Download of %s failed. Could not create file.", fileName));
+            updateMessage(String.format("Download of %s failed. Could not create file.", file.getName()));
             failTask = true;
         } finally {
             latch.countDown();
-
         }
     }
 
     @Override
     protected void failed() {
+        //TODO As per initializeFile
         super.failed();
         file.delete();
+    }
+
+    public void addPostDownloadOperation(Consumer<File> operation) {
+
+        postDownloadFunctions.add(operation);
+    }
+
+    //Standard overrides and getters
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof DownloadTask)
+                && this.file.getAbsolutePath().equals(((DownloadTask) obj).file.getAbsolutePath());
+    }
+
+    public String getDownloadLocation() {
+        return downloadLocation;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public String getFileName() {
+        return file.getName();
+    }
+
+    @Override
+    public String toString() {
+
+        String tagsAsString;
+
+        return String.format("Download task [from: %s to: %s]",
+                downloadLocation, file.getAbsolutePath());
     }
 }
