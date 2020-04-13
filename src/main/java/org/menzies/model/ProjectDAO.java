@@ -27,10 +27,7 @@ public class ProjectDAO {
     UI a chance to observe the progress of the task, whilst allowing runtime safety.
      */
 
-    public Task<Void> updateProject(Project) {
+    public Task<Void> updateProject(Project project) {
         return null;
     }
-
-
-
 }

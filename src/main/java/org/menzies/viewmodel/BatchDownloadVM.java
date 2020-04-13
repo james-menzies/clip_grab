@@ -39,6 +39,8 @@ public class BatchDownloadVM <T extends Task<?>> {
     private final String COMPLETE = "All downloads complete";
     private final String USER_TERMINATED = "Program terminated by user.";
 
+    // TODO: 13/04/2020 I need to make this class accept a project instance.
+
     public BatchDownloadVM(ExecutorService service, List<T> tasks)  {
 
         this.service = service;

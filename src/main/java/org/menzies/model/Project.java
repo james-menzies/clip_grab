@@ -1,35 +1,63 @@
 package org.menzies.model;
 
 import org.menzies.model.library.Library;
+import org.menzies.model.service.parsing.ParsingService;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 public class Project  {
 
 /*POJO class for handling the project instances in persistence.*/
-    private String name;
+    public static final String DEFAULT = "$DEFAULT";
     private Library library;
     private String rootDir;
     private String subDir;
     private boolean defaultTags;
     private Map<String, String> customTags;
     private List<LibraryElement> elements;
+    private CountDownLatch latch;
 
     public Project() {
-
     }
 
 
-    public Project(Library library, String rootDir) {
+    public Project(Library library, String rootDir) throws IOException {
+
+        this(library, rootDir, DEFAULT, true, new HashMap<>());
+    }
+
+    public Project(Library library, String rootDir, String subDir, boolean defaultTags, Map<String, String> customTags) throws IOException {
         this.library = library;
         this.rootDir = rootDir;
+        this.subDir = subDir;
+        this.defaultTags = defaultTags;
+        this.customTags = customTags;
+        initializeElements();
+
+    }
+
+    public void lock() {
+
+
+        if (latch.getCount() == 0) {
+            latch = new CountDownLatch(1);
+        }
+    }
+
+    public void unlock() {
+        latch.countDown();
     }
 
 
-    public String getName() {
-        return name;
+    private void initializeElements() throws IOException {
+
+        String fileDir = rootDir + subDir;
+        elements = ParsingService.parse(library, fileDir, defaultTags, customTags);
     }
 
     public Library getLibrary() {
@@ -49,11 +77,17 @@ public class Project  {
     }
 
     public Map<String, String> getCustomTags() {
-        return customTags;
+
+        return Collections.unmodifiableMap(customTags);
     }
 
     public List<LibraryElement> getElements() {
-        return elements;
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return Collections.unmodifiableList(elements);
     }
 
 }

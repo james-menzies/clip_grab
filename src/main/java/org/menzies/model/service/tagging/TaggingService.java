@@ -17,14 +17,8 @@ public class TaggingService {
 
     }
 
-
+    // TODO: 13/04/2020 implement tag method
     public void tagFile(Taggable taggable) {
 
-
-
-
-
     }
-
-
 }
