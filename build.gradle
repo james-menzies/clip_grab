@@ -26,4 +26,5 @@ dependencies {
     testImplementation 'de.saxsys:jfx-testrunner:1.2'
     implementation 'org.apache.commons:commons-csv:1.8'
     implementation 'org:jaudiotagger:2.0.3'
+    compile 'org.hibernate:hibernate-core:5.4.14.Final'
 }

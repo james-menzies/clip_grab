@@ -1,4 +1,4 @@
-package org.menzies.model;
+package org.menzies.model.service.download;
 
 import javafx.concurrent.Task;
 
@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 public class DownloadTask extends Task<File> {
 
     private File file;
-    private final String downloadLocation;
+    private final URL downloadLocation;
     private final CountDownLatch latch;
     private boolean failTask;
     private final List<Consumer<File>> postDownloadFunctions;
@@ -27,10 +27,10 @@ public class DownloadTask extends Task<File> {
     private ReadableByteChannel inputChannel;
     private FileChannel outputChannel;
 
-    public DownloadTask(String fileDir, String downloadLocation) {
+    public DownloadTask(Downloadable downloadable) {
 
-        file = new File(fileDir);
-        this.downloadLocation = downloadLocation;
+        file = downloadable.getFile();
+        downloadLocation = downloadable.getSource();
         postDownloadFunctions = new ArrayList<>();
         latch = new CountDownLatch(2);
     }
@@ -81,7 +81,7 @@ public class DownloadTask extends Task<File> {
 
 
         try {
-            conn = new URL(downloadLocation).openConnection();
+            conn = downloadLocation.openConnection();
         } catch (IOException | IllegalArgumentException e) {
             updateMessage(String.format("Download of %s failed. Invalid URL.", file.getName()));
             failTask = true;
@@ -125,19 +125,10 @@ public class DownloadTask extends Task<File> {
         file.delete();
     }
 
-    public void addPostDownloadOperation(Consumer<File> operation) {
-
-        postDownloadFunctions.add(operation);
-    }
-
     //Standard overrides and getters
-    @Override
-    public boolean equals(Object obj) {
-        return (obj instanceof DownloadTask)
-                && this.file.getAbsolutePath().equals(((DownloadTask) obj).file.getAbsolutePath());
-    }
 
-    public String getDownloadLocation() {
+
+    public URL getDownloadLocation() {
         return downloadLocation;
     }
 

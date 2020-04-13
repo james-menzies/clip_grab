@@ -1,4 +1,4 @@
-package org.menzies.model.tagging;
+package org.menzies.model.service.tagging;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -36,7 +36,6 @@ public class JAudioTagger implements AudioTagger {
         return true;
     }
 
-
     @Override
     public boolean addTag(String ID, String value) {
 
@@ -54,6 +53,11 @@ public class JAudioTagger implements AudioTagger {
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public boolean clearTags() {
+        return false;
     }
 
     @Override

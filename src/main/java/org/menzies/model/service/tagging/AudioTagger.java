@@ -1,4 +1,4 @@
-package org.menzies.model.tagging;
+package org.menzies.model.service.tagging;
 
 import java.io.File;
 
@@ -11,6 +11,8 @@ public interface AudioTagger {
     boolean setFile(File file);
 
     boolean addTag(String ID, String value);
+
+    boolean clearTags();
 
     boolean commit();
 }

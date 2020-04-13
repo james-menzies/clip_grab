@@ -2,8 +2,9 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.menzies.model.SetUpFlow;
-import org.menzies.view.Director;
+import org.menzies.model.library.Library;
+import org.menzies.model.library.LibraryConfig;
+
 
 public class MainApp extends Application {
 
@@ -22,10 +23,12 @@ public class MainApp extends Application {
         BorderPane dynamicScene = new BorderPane();
         root.setCenter(dynamicScene);
 
-        SetUpFlow flow = new SetUpFlow();
-        Director director = new Director(dynamicScene, flow);
-        director.start();
+
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
+
+        Library l = Library.BBC;
+
+        LibraryConfig config = l.get();
     }
 }
