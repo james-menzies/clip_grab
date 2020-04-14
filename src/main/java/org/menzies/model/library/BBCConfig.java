@@ -13,8 +13,7 @@ public class BBCConfig implements LibraryConfig {
     public static final File sourceCSV;
 
     static {
-        URL url = BBCConfig.class.getResource("/csv/BBC.csv");
-        sourceCSV = new File(url.toExternalForm());
+        sourceCSV = new File(BBCConfig.class.getResource("/BBC.csv").getFile());
     }
 
 
@@ -26,10 +25,10 @@ public class BBCConfig implements LibraryConfig {
     @Override
     public String getDefaultSubDir(CSVRecord record) {
 
-        String cdName = makeFileSafe(record.get("CDName"));
-        String cdNumber = makeFileSafe(record.get("CDNumber"));
-        String fileName = makeFileSafe(record.get("description"));
-        String category = makeFileSafe(record.get("category"));
+        String cdName = makeFileSafe(record.get("CD_NAME"));
+        String cdNumber = makeFileSafe(record.get("CD_NUMBER"));
+        String fileName = makeFileSafe(record.get("DESCRIPTION"));
+        String category = makeFileSafe(record.get("CATEGORY"));
 
 
         StringBuilder builder = new StringBuilder();
@@ -64,9 +63,15 @@ public class BBCConfig implements LibraryConfig {
 
         tags.put("ARTIST", "BBC");
         tags.put("GENRE", "Sound Effects");
-        tags.put("ALBUM", "BBC: " + record.get("CDName"));
-        tags.put("TITLE", record.get("description"));
+        tags.put("ALBUM", "BBC: " + record.get("CD_NAME"));
+        tags.put("TITLE", record.get("DESCRIPTION"));
 
         return tags;
+    }
+
+    @Override
+    public String[] getHeaders() {
+        return new String[] {"LOCATION", "DESCRIPTION", "SECONDS", "CATEGORY",
+                           "CD_NUMBER", "CD_NAME", "TRACK_NO"};
     }
 }

@@ -1,6 +1,7 @@
 package org.menzies.model;
 
 import org.menzies.model.library.Library;
+import org.menzies.model.service.parsing.FailedParseException;
 import org.menzies.model.service.parsing.ParsingService;
 
 import java.io.IOException;
@@ -26,18 +27,19 @@ public class Project  {
     }
 
 
-    public Project(Library library, String rootDir) throws IOException {
+    public Project(Library library, String rootDir) throws FailedParseException {
 
         this(library, rootDir, DEFAULT, true, new HashMap<>());
     }
 
-    public Project(Library library, String rootDir, String subDir, boolean defaultTags, Map<String, String> customTags) throws IOException {
+    public Project(Library library, String rootDir, String subDir, boolean defaultTags, Map<String, String> customTags) throws FailedParseException {
         this.library = library;
         this.rootDir = rootDir;
         this.subDir = subDir;
         this.defaultTags = defaultTags;
         this.customTags = customTags;
         initializeElements();
+        latch = new CountDownLatch(0);
 
     }
 
@@ -54,10 +56,9 @@ public class Project  {
     }
 
 
-    private void initializeElements() throws IOException {
+    private void initializeElements() throws FailedParseException {
 
-        String fileDir = rootDir + subDir;
-        elements = ParsingService.parse(library, fileDir, defaultTags, customTags);
+        elements = ParsingService.parse(library, rootDir, subDir, defaultTags, customTags);
     }
 
     public Library getLibrary() {

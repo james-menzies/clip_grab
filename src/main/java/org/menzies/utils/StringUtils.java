@@ -20,7 +20,7 @@ public class StringUtils {
 
         string = string.trim();
 
-        string = string.replaceAll("[\\\\/:*?\"<>|]", "");
+        string = string.replaceAll("[\\\\/:*?\"<>|]", " ");
 
         Matcher matcher = withoutDotsAtEnd.matcher(string);
         matcher.find();

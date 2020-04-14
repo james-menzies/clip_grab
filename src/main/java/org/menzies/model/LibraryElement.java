@@ -45,6 +45,12 @@ public class LibraryElement implements Taggable, Downloadable {
 
     }
 
+    @Override
+    public String toString() {
+        return String.format("Lib Element. Source: %s FileLoc: %s Tags: %s", source.toExternalForm(),
+                file.getAbsolutePath(), tags.toString());
+    }
+
     public LibraryElement(boolean completed, URL source, File file, Map<String, String> tags) {
         this.completed = completed;
         this.source = source;
@@ -61,7 +67,6 @@ public class LibraryElement implements Taggable, Downloadable {
         public Builder() {
 
             completed = false;
-            tags = new HashMap<>();
         }
 
         public Builder setCompleted(boolean completed) {
@@ -79,15 +84,17 @@ public class LibraryElement implements Taggable, Downloadable {
             return this;
         }
 
-        public Builder addTag(String category, String value) {
-            tags.put(category, value);
+        public Builder setTags(Map<String, String> tags) {
+
+            this.tags = tags;
             return this;
         }
+
 
         public LibraryElement build()
             throws IllegalStateException {
 
-            if (file == null || source == null) {
+            if (file == null || source == null || tags == null) {
                 throw new IllegalStateException("Source and/or file " +
                         "not initialized in Library Element Builder.");
             }

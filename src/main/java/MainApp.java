@@ -5,6 +5,8 @@ import javafx.stage.Stage;
 import org.menzies.model.library.Library;
 import org.menzies.model.library.LibraryConfig;
 
+import java.io.File;
+
 
 public class MainApp extends Application {
 
@@ -27,8 +29,8 @@ public class MainApp extends Application {
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
 
-        Library l = Library.BBC;
 
-        LibraryConfig config = l.get();
+
+
     }
 }

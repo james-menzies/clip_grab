@@ -11,5 +11,7 @@ public interface LibraryConfig {
     String getDefaultSubDir(CSVRecord record);
     String getSource(CSVRecord record);
     HashMap<String, String> getDefaultTags(CSVRecord record);
+    String [] getHeaders();
+
 
     }

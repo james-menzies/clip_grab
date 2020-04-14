@@ -26,4 +26,9 @@ public class ZapSplatConfig implements LibraryConfig {
     public HashMap<String, String> getDefaultTags(CSVRecord record) {
         return null;
     }
+
+    @Override
+    public String[] getHeaders() {
+        return new String[0];
+    }
 }

@@ -2,7 +2,7 @@ package org.menzies.model.library;
 
 import java.util.function.Supplier;
 
-public enum Library implements Supplier<LibraryConfig> {
+public enum Library {
 
     BBC(BBCConfig::new),
     ZAPSPLAT(ZapSplatConfig::new),
@@ -15,7 +15,7 @@ public enum Library implements Supplier<LibraryConfig> {
         this.config = config;
     }
 
-    public LibraryConfig get() {
+    public LibraryConfig getConfig() {
 
          return config.get();
     }
