@@ -1,10 +1,12 @@
 package org.menzies.model.library;
 
 import org.apache.commons.csv.CSVRecord;
+import org.menzies.model.pojo.Tag;
 
 import java.io.File;
-import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.menzies.utils.StringUtils.makeFileSafe;
 
@@ -13,7 +15,8 @@ public class BBCConfig implements LibraryConfig {
     public static final File sourceCSV;
 
     static {
-        sourceCSV = new File(BBCConfig.class.getResource("/BBC.csv").getFile());
+        sourceCSV = new File(BBCConfig.class.getResource("/csv/BBC.csv").getFile());
+        System.out.println("past source init");
     }
 
 
@@ -58,14 +61,12 @@ public class BBCConfig implements LibraryConfig {
     }
 
     @Override
-    public HashMap<String, String> getDefaultTags(CSVRecord record) {
-        HashMap<String, String> tags = new HashMap<>();
-
-        tags.put("ARTIST", "BBC");
-        tags.put("GENRE", "Sound Effects");
-        tags.put("ALBUM", "BBC: " + record.get("CD_NAME"));
-        tags.put("TITLE", record.get("DESCRIPTION"));
-
+    public Set<Tag> getDefaultTags(CSVRecord record) {
+        Set<Tag> tags = new HashSet<>();
+        tags.add(new Tag("ARTIST", "BBC"));
+        tags.add(new Tag("GENRE", "Sound Effects"));
+        tags.add(new Tag("ALBUM", "BBC: " + record.get("CD_NAME")));
+        tags.add(new Tag("TITLE", record.get("DESCRIPTION")));
         return tags;
     }
 

@@ -3,8 +3,10 @@ package org.menzies.model.service.parsing;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.menzies.model.LibraryElement;
-import org.menzies.model.Project;
+import org.menzies.model.pojo.LibraryElement;
+import org.menzies.model.pojo.Project;
+import org.menzies.model.pojo.Tag;
+import org.menzies.model.pojo.TagTemplate;
 import org.menzies.model.library.Library;
 
 import java.io.File;
@@ -19,36 +21,34 @@ public class ParsingService {
     private Library library;
     private String subDirRegex;
     private String rootDir;
-    boolean defaultTags;
-    Map<String, String> customTagRegexs;
-    Iterator<CSVRecord> iterator;
+    private boolean defaultTags;
+    private Set<TagTemplate> tagTemplates;
+    private Iterator<CSVRecord> iterator;
 
-    private ParsingService(Library library, String rootDir, String subDirRegex, boolean defaultTags, Map<String, String> customTagRegexs) {
+    private ParsingService(Library library, String rootDir, String subDirRegex, boolean defaultTags, Set<TagTemplate> tagTemplates) {
         this.library = library;
         this.subDirRegex = subDirRegex;
         this.rootDir = rootDir;
         this.defaultTags = defaultTags;
-        this.customTagRegexs = customTagRegexs;
+        this.tagTemplates = tagTemplates;
     }
 
-    public static List<LibraryElement> parse(Library library, String subDirRegex, String rootDir,
-                                             boolean defaultTags, Map<String, String> customTags) throws FailedParseException {
+    public static Set<LibraryElement> parse(Library library, String subDirRegex, String rootDir,
+                                             boolean defaultTags, Set<TagTemplate> tagTemplates) throws FailedParseException {
 
-        return new ParsingService(library, subDirRegex, rootDir, defaultTags, customTags).run();
+        return new ParsingService(library, subDirRegex, rootDir, defaultTags, tagTemplates).generate();
     }
 
-    private List<LibraryElement> run() throws FailedParseException {
+    private Set<LibraryElement> generate() throws FailedParseException {
 
-
-
-        List<LibraryElement> list = new ArrayList<>();
+        Set<LibraryElement> libraryElements = new HashSet<>();
         iterator = initializeParser().iterator();
 
         while (iterator.hasNext()) {
-           list.add(processRecord(iterator.next()));
+           libraryElements.add(processRecord(iterator.next()));
         }
 
-        return list;
+        return libraryElements;
     }
 
     private String getLiteralFromRegex(CSVRecord record, String regex, String phase) throws FailedParseException {
@@ -69,9 +69,8 @@ public class ParsingService {
 
     private LibraryElement processRecord(CSVRecord record) throws FailedParseException {
         URL source;
-        File file;
-        Map<String, String> literalTags;
-
+        String file;
+        Set<Tag> tags;
 
         try {
             source = new URL(library.getConfig().getSource(record));
@@ -87,26 +86,31 @@ public class ParsingService {
         }
         else subDir = getLiteralFromRegex(record, subDirRegex, "File Name Parse");
 
-        file = new File(rootDir + subDir);
+        file = rootDir + subDir;
 
-        literalTags = new HashMap<>();
+        tags = new HashSet<>();
 
-        for (String category :
-                customTagRegexs.keySet()) {
+        for (TagTemplate template :
+                tagTemplates) {
 
-            String literalTagValue = getLiteralFromRegex(record,
-                    customTagRegexs.get(category), "Tag Parse");
+            String value = getLiteralFromRegex(record, template.getRegex(),
+                    String.format("Custom Tag Parse(%s)", template.getField()));
+            String field = template.getField();
+
+            Tag tag = new Tag(field, value);
+            tags.add(tag);
         }
 
         if (defaultTags) {
-            literalTags.putAll(library.getConfig().getDefaultTags(record));
+
+            tags.addAll(library.getConfig().getDefaultTags(record));
         }
 
         return new LibraryElement.Builder()
                 .setCompleted(false)
                 .setFile(file)
                 .setSource(source)
-                .setTags(literalTags)
+                .setTags(tags)
                 .build();
     }
 

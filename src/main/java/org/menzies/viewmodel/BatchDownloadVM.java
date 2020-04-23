@@ -6,21 +6,23 @@ import javafx.beans.property.*;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
+import org.menzies.model.pojo.Project;
+import org.menzies.model.service.download.DownloadTask;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
-public class BatchDownloadVM <T extends Task<?>> {
+public class BatchDownloadVM {
 
 
     private final ExecutorService service;
-    private final Iterator<T> pendingTasks;
+    private final Iterator<DownloadTask> pendingTasks;
     private final ObservableList<DownloadTileVM> runningViewModels;
-    private final Map<T, DownloadTileVM> taskToVMReference;
+    private final Map<DownloadTask, DownloadTileVM> taskToVMReference;
 
     private final IntegerProperty totalActivated;
     private final IntegerBinding currentlyActivated;
@@ -39,11 +41,15 @@ public class BatchDownloadVM <T extends Task<?>> {
     private final String COMPLETE = "All downloads complete";
     private final String USER_TERMINATED = "Program terminated by user.";
 
-    // TODO: 13/04/2020 I need to make this class accept a project instance.
 
-    public BatchDownloadVM(ExecutorService service, List<T> tasks)  {
+    public BatchDownloadVM(ExecutorService service, Project project)  {
+
+
 
         this.service = service;
+        List<DownloadTask> tasks = project.getElements().stream()
+                .map(libraryElement -> new DownloadTask(libraryElement))
+                .collect(Collectors.toList());
         pendingTasks = tasks.iterator();
         downloadLog = FXCollections.observableArrayList();
 
@@ -84,7 +90,7 @@ public class BatchDownloadVM <T extends Task<?>> {
     private void activatePendingTasks(int amount) {
 
         for (int i=0; i < amount; i++) {
-            T task = pendingTasks.next();
+            DownloadTask task = pendingTasks.next();
             pendingTasks.remove();
             service.submit(task);
             task.setOnRunning(e -> createViewModel(task));
@@ -96,14 +102,14 @@ public class BatchDownloadVM <T extends Task<?>> {
         totalActivated.set(totalActivated.get() + amount);
     }
 
-    private void createViewModel(T task) {
+    private void createViewModel(DownloadTask task) {
 
         var viewModel = new DownloadTileVM(task);
         taskToVMReference.put(task, viewModel);
         runningViewModels.add(viewModel);
     }
 
-    private void cleanUpTask(T task, boolean success) {
+    private void cleanUpTask(DownloadTask task, boolean success) {
 
         downloadLog.add(0, task.getMessage());
         updateTotals(success);

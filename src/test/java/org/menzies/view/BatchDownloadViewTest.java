@@ -41,12 +41,12 @@ public class BatchDownloadViewTest  {
     }
 
 //    @Ignore
-    @Test
-    @TestInJfxThread
+  /*  @Test
+*//*    @TestInJfxThread
     public void demo() throws IOException {
 
-        var viewModel = new BatchDownloadVM<>(service, workers);
+        var viewModel = new BatchDownloadVM(service, workers);
         Parent root = JFXUtil.getRoot(viewModel, "/BatchDownload.fxml");
         JFXUtil.createStage(root).showAndWait();
-    }
+    }*/
 }

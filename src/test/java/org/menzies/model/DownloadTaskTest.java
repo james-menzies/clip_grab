@@ -59,7 +59,7 @@ public class DownloadTaskTest
         ExecutorService service = Executors.newSingleThreadExecutor();
         DownloadTileVM vm = new DownloadTileVM(task);
         service.submit(task);
-        Parent root = JFXUtil.getRoot(vm, "/DownloadTile.fxml");
+        Parent root = JFXUtil.getRoot(vm, "/org/menzies/view/DownloadTile.fxml");
         JFXUtil.createStage(root).showAndWait();
     }
 

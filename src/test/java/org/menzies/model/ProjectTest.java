@@ -2,11 +2,8 @@ package org.menzies.model;
 
 import org.junit.Test;
 import org.menzies.model.library.Library;
+import org.menzies.model.pojo.Project;
 import org.menzies.model.service.parsing.FailedParseException;
-
-import java.io.File;
-
-import static org.junit.Assert.*;
 
 public class ProjectTest {
 
@@ -26,9 +23,6 @@ public class ProjectTest {
         } catch (FailedParseException e) {
             e.printStackTrace();
         }
-
-
-
     }
 
 }

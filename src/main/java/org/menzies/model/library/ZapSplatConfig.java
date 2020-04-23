@@ -1,9 +1,10 @@
 package org.menzies.model.library;
 
 import org.apache.commons.csv.CSVRecord;
+import org.menzies.model.pojo.Tag;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.Set;
 
 public class ZapSplatConfig implements LibraryConfig {
 
@@ -23,7 +24,7 @@ public class ZapSplatConfig implements LibraryConfig {
     }
 
     @Override
-    public HashMap<String, String> getDefaultTags(CSVRecord record) {
+    public Set<Tag> getDefaultTags(CSVRecord record) {
         return null;
     }
 

@@ -53,7 +53,7 @@ public class BatchDownloadView implements View<BatchDownloadVM> {
 
     private void configureView() {
 
-        URL url = getClass().getResource("/DownloadTile.fxml");
+        URL url = getClass().getResource("/org/menzies/view/DownloadTile.fxml");
         var display = new NodeListDisplay<DownloadTileVM>
                 (url, dropInForDownloads, viewModel.runningViewModelsProperty());
 
