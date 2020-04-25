@@ -6,25 +6,37 @@ import javafx.beans.property.*;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.menzies.model.pojo.Project;
-import org.menzies.model.service.download.DownloadTask;
+import javafx.concurrent.Task;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
-public class BatchDownloadVM {
+public class BatchDownloadVM<T extends Task<?>> {
 
-
-    private final ExecutorService service;
-    private final Iterator<DownloadTask> pendingTasks;
-    private final ObservableList<DownloadTileVM> runningViewModels;
-    private final Map<DownloadTask, DownloadTileVM> taskToVMReference;
+    /*
+     * There are two properties which potentially require explanation,
+     * <totalActivated> and <currentlyActivated>. They are there to reduce
+     * the memory footprint of the application. To
+     *
+     * The class initially activates 20 items. Since there is no reliable way
+     * to track how many tasks are in the executor service, <totalActivated>
+     * tracks the total that have been submitted over the lifetime of the download.
+     * <currentlyActive> monitors those that are alive,
+     * and when it drops to 10, triggers the class to activate up to 20 again. This
+     * ensures that the service always has tasks to execute, whilst keeping memory usage low.
+     *
+     * I hope to find a more elegant way of achieving this in the future.
+     */
 
     private final IntegerProperty totalActivated;
+    private final ExecutorService service;
+    private final Iterator<T> pendingTasks;
+    private final ObservableList<DownloadTileVM> runningViewModels;
+    private final Map<T, DownloadTileVM> taskToVMReference;
+    private final IntegerBinding remainingActive;
     private final IntegerBinding currentlyActivated;
 
     private final ObservableList<String> downloadLog;
@@ -38,18 +50,18 @@ public class BatchDownloadVM {
     private final ReadOnlyBooleanWrapper shutDownDisabled;
     private final ReadOnlyBooleanWrapper hardShutDownDisabled;
 
+    private ReadOnlyBooleanWrapper running;
+
     private final String COMPLETE = "All downloads complete";
     private final String USER_TERMINATED = "Program terminated by user.";
 
 
-    public BatchDownloadVM(ExecutorService service, Project project)  {
+    public BatchDownloadVM(ExecutorService service, Collection<T> tasks)  {
 
 
 
+        running = new ReadOnlyBooleanWrapper(false);
         this.service = service;
-        List<DownloadTask> tasks = project.getElements().stream()
-                .map(libraryElement -> new DownloadTask(libraryElement))
-                .collect(Collectors.toList());
         pendingTasks = tasks.iterator();
         downloadLog = FXCollections.observableArrayList();
 
@@ -69,6 +81,15 @@ public class BatchDownloadVM {
         shutDownDisabled = new ReadOnlyBooleanWrapper(true);
         hardShutDownDisabled = new ReadOnlyBooleanWrapper(true);
         status = new ReadOnlyStringWrapper("Press start to download");
+        remainingActive = Bindings.size(runningViewModels);
+
+    }
+
+    //needed due to potentially starting a project mid way through.
+    private void setDownloadTotal(int downloadTotal) {
+        if (!running.get()) {
+            this.downloadTotal.set(downloadTotal);
+        } else System.out.println("Cannot change total. Download already started.");
     }
 
     private IntegerBinding initializeCurrentlyActivated() {
@@ -78,6 +99,7 @@ public class BatchDownloadVM {
     }
 
     public void handleStart()  {
+        running.set(true);
         startDisabled.set(true);
         shutDownDisabled.set(false);
         hardShutDownDisabled.set(false);
@@ -87,10 +109,14 @@ public class BatchDownloadVM {
         addCompletionListener();
     }
 
+    public BooleanProperty runningProperty() {
+        return running;
+    }
+
     private void activatePendingTasks(int amount) {
 
         for (int i=0; i < amount; i++) {
-            DownloadTask task = pendingTasks.next();
+            T task = pendingTasks.next();
             pendingTasks.remove();
             service.submit(task);
             task.setOnRunning(e -> createViewModel(task));
@@ -102,14 +128,14 @@ public class BatchDownloadVM {
         totalActivated.set(totalActivated.get() + amount);
     }
 
-    private void createViewModel(DownloadTask task) {
+    private void createViewModel(T task) {
 
         var viewModel = new DownloadTileVM(task);
         taskToVMReference.put(task, viewModel);
         runningViewModels.add(viewModel);
     }
 
-    private void cleanUpTask(DownloadTask task, boolean success) {
+    private void cleanUpTask(T task, boolean success) {
 
         downloadLog.add(0, task.getMessage());
         updateTotals(success);
@@ -151,7 +177,9 @@ public class BatchDownloadVM {
         status.set(shutDown);
         service.shutdown();
 
-        Bindings.size(runningViewModels).addListener( (v, o, n) -> {
+        remainingActive.addListener( (v, o, n) -> {
+
+            System.out.println("Remaining active downloads: " + n.intValue());
             if (n.intValue() == 0) {
                 end(USER_TERMINATED);
             }

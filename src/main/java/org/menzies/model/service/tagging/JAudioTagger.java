@@ -2,6 +2,7 @@ package org.menzies.model.service.tagging;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
@@ -57,14 +58,25 @@ public class JAudioTagger implements AudioTagger {
 
     @Override
     public boolean clearTags() {
-        return false;
+
+        try {
+            file.delete();
+        } catch (CannotReadException e) {
+            e.printStackTrace();
+            return false;
+        } catch (CannotWriteException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     @Override
     public boolean commit() {
 
         try {
-            file.commit();
+            AudioFileIO.write(file);
             return true;
         } catch (CannotWriteException e) {
             e.printStackTrace();

@@ -19,6 +19,10 @@ public class TagTemplate {
     @Column(name = "regex")
     private String regex;
 
+    private TagTemplate() {
+
+    }
+
     public TagTemplate(String field, String regex) {
         this.field = field;
         this.regex = regex;

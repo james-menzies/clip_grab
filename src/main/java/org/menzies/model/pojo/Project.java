@@ -1,5 +1,8 @@
 package org.menzies.model.pojo;
 
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.menzies.model.library.Library;
 import org.menzies.model.service.parsing.FailedParseException;
 import org.menzies.model.service.parsing.ParsingService;
@@ -32,9 +35,9 @@ public class Project  {
     @Column(name = "default_tags_used")
     private boolean defaultTagsUsed;
 
-    @OneToMany (cascade = CascadeType.ALL,
-        fetch = FetchType.LAZY,
-        orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true)
     @JoinColumn(name = "project_id")
     private Set<TagTemplate> tagTemplates;
 
@@ -42,6 +45,8 @@ public class Project  {
             fetch = FetchType.LAZY,
             orphanRemoval = true)
     @JoinColumn(name = "project_id")
+    @Fetch(FetchMode.SELECT)
+    @BatchSize(size = 10)
     private Set<LibraryElement> elements;
 
     @Transient

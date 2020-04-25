@@ -11,6 +11,10 @@ targetCompatibility = 11
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://jitpack.io"
+    }
+
 }
 
 mainClassName = 'MainApp'
@@ -25,9 +29,11 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation 'de.saxsys:jfx-testrunner:1.2'
     implementation 'org.apache.commons:commons-csv:1.8'
-    implementation 'org:jaudiotagger:2.0.3'
+
     implementation 'org.hibernate:hibernate-core:5.4.14.Final'
     compile 'com.h2database:h2:1.4.200'
     compile 'org.hibernate:hibernate-c3p0:5.4.14.Final'
     compile 'c3p0:c3p0:0.9.1.2'
+
+    compile 'com.github.goxr3plus:jaudiotagger:2.2.7'
 }

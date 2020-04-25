@@ -18,6 +18,10 @@ public class Tag {
     @Column(name = "value")
     private String value;
 
+    private Tag() {
+
+    }
+
     public Tag(String field, String value) {
         this.field = field;
         this.value = value;

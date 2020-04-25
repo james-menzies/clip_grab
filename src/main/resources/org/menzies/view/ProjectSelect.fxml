@@ -15,13 +15,13 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="433.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="433.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.menzies.view.ProjectSelectView">
    <left>
       <BorderPane BorderPane.alignment="CENTER">
          <center>
             <VBox prefHeight="400.0" prefWidth="301.0" spacing="15.0">
                <children>
-                  <RadioButton mnemonicParsing="false" text="Begin New Download" />
+                  <RadioButton fx:id="newDownload" mnemonicParsing="false" text="Begin New Download" />
                   <GridPane hgap="5.0">
                     <columnConstraints>
                       <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="66.0" minWidth="10.0" prefWidth="61.0" />
@@ -35,10 +35,10 @@
                     </rowConstraints>
                      <children>
                         <Label text="Root:" />
-                        <Button mnemonicParsing="false" text="Choose" GridPane.columnIndex="3" />
+                        <Button fx:id="chooseFolder" mnemonicParsing="false" text="Choose" GridPane.columnIndex="3" />
                         <Label text="Library: " GridPane.rowIndex="1" />
-                        <ChoiceBox prefWidth="115.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <Label prefHeight="17.0" prefWidth="158.0" text="(None Selected)" textOverrun="LEADING_ELLIPSIS" GridPane.columnIndex="1" GridPane.columnSpan="2" />
+                        <ChoiceBox fx:id="libraryChoiceBox" prefWidth="115.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <Label fx:id="chosenDirectory" prefHeight="17.0" prefWidth="158.0" text="(None Selected)" textOverrun="LEADING_ELLIPSIS" GridPane.columnIndex="1" GridPane.columnSpan="2" />
                         <Button contentDisplay="RIGHT" disable="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="106.0" text="Edit Libraries" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="1" />
                      </children>
                      <padding>
@@ -63,19 +63,19 @@
    <bottom>
       <ButtonBar prefHeight="40.0" prefWidth="570.0" BorderPane.alignment="CENTER">
         <buttons>
-          <Button mnemonicParsing="false" text="Run" />
+          <Button fx:id="runButton" mnemonicParsing="false" text="Run" />
         </buttons>
       </ButtonBar>
    </bottom>
    <center>
       <VBox prefHeight="200.0" prefWidth="100.0" spacing="15.0" BorderPane.alignment="CENTER">
          <children>
-            <RadioButton mnemonicParsing="false" text="Continue Existing Download">
+            <RadioButton fx:id="existingDownload" mnemonicParsing="false" text="Continue Existing Download">
                <padding>
                   <Insets bottom="20.0" />
                </padding>
             </RadioButton>
-            <ListView prefHeight="274.0" prefWidth="269.0" />
+            <ListView fx:id="savedProjects" prefHeight="274.0" prefWidth="269.0" />
             <HBox alignment="CENTER_LEFT" spacing="10.0">
                <children>
                   <Button disable="true" mnemonicParsing="false" text="Reconfigure Project" />

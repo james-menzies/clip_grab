@@ -22,16 +22,17 @@ public class DownloadTask extends Task<File> {
     private final URL downloadLocation;
     private final CountDownLatch latch;
     private boolean failTask;
-    private final List<Consumer<File>> postDownloadFunctions;
+    private final List<Consumer<File>> postDownloadTasks;
     private URLConnection conn;
     private ReadableByteChannel inputChannel;
     private FileChannel outputChannel;
+
 
     public DownloadTask(Downloadable downloadable) {
 
         file = downloadable.getFile();
         downloadLocation = downloadable.getSource();
-        postDownloadFunctions = new ArrayList<>();
+        postDownloadTasks = new ArrayList<>();
         latch = new CountDownLatch(2);
     }
 
@@ -65,15 +66,21 @@ public class DownloadTask extends Task<File> {
             currentIndex += packetSize;
         }
 
-        for (Consumer<File> operation : postDownloadFunctions) {
+        for (Consumer<File> operation : postDownloadTasks) {
 
             operation.accept(file);
         }
-        updateMessage("Download successful");
 
         inputChannel.close();
         outputChannel.close();
 
+        updateMessage("Performing post download tasks...");
+
+        for (Consumer<File> task : postDownloadTasks) {
+            task.accept(file);
+        }
+
+        updateMessage(String.format("Downloaded %s", file.getName()));
         return file;
     }
 
@@ -104,25 +111,44 @@ public class DownloadTask extends Task<File> {
         }
 
         try {
-            if (!file.getParentFile().exists()) {
-                file.mkdirs();
+            file.getParentFile().mkdirs();
+            if (!file.exists()) {
+                file.createNewFile();
             }
-            file.createNewFile();
             outputChannel = new FileOutputStream(file).getChannel();
 
         } catch (IOException e) {
             updateMessage(String.format("Download of %s failed. Could not create file.", file.getName()));
+            e.printStackTrace();
             failTask = true;
         } finally {
             latch.countDown();
         }
     }
 
+    public void addPostDownloadTask(Consumer<File> task) {
+
+        postDownloadTasks.add(task);
+    }
+
     @Override
     protected void failed() {
-        //TODO As per initializeFile
+
+
+        if (!failTask) {
+
+            updateMessage("Download Cancelled");
+        }
         super.failed();
         file.delete();
+
+        // TODO: 24/04/2020 Make sure this won't delete everything before inclusion!
+//
+//        File parent = file.getParentFile();
+//        while (parent.isDirectory() && parent.list().length == 0) {
+//            parent.delete();
+//            parent = parent.getParentFile();
+//        }
     }
 
     //Standard overrides and getters

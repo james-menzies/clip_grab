@@ -8,14 +8,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 import org.menzies.viewmodel.BatchDownloadVM;
-import org.menzies.viewmodel.DownloadTileVM;
 
 import java.net.URL;
 
-public class BatchDownloadView implements View<BatchDownloadVM> {
+public class BatchDownloadView implements View<BatchDownloadVM<?>> {
 
 
-    private BatchDownloadVM viewModel;
+    private BatchDownloadVM<?>  viewModel;
     
     
     @FXML
@@ -42,7 +41,7 @@ public class BatchDownloadView implements View<BatchDownloadVM> {
     private NodeListDisplay<StringProperty> display;
 
     @Override
-    public void setVM(BatchDownloadVM vm) {
+    public void setVM(BatchDownloadVM<?> vm) {
         
         if (viewModel == null) {
             this.viewModel = vm;
@@ -54,7 +53,7 @@ public class BatchDownloadView implements View<BatchDownloadVM> {
     private void configureView() {
 
         URL url = getClass().getResource("/org/menzies/view/DownloadTile.fxml");
-        var display = new NodeListDisplay<DownloadTileVM>
+        var display = new NodeListDisplay<>
                 (url, dropInForDownloads, viewModel.runningViewModelsProperty());
 
         downloadTotal.setText(String.valueOf(viewModel.downloadTotalProperty().get()));
@@ -68,12 +67,9 @@ public class BatchDownloadView implements View<BatchDownloadVM> {
         status.textProperty().bind(viewModel.statusProperty());
 
 
-        startButton.setOnAction(event -> {
-            viewModel.handleStart();
-        });
-        shutdownButton.setOnAction(event -> {
-            viewModel.handleShutDown();
-        });
+
+        startButton.setOnAction(event -> viewModel.handleStart());
+        shutdownButton.setOnAction(event -> viewModel.handleShutDown());
         hardShutdownButton.setOnAction(event -> viewModel.handleHardShutDown());
 
         downloadLog.setFocusTraversable(false);

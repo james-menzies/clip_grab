@@ -68,4 +68,7 @@ return true;
 
         return null;
     }
+
+    public void saveProject(Project project) {
+    }
 }

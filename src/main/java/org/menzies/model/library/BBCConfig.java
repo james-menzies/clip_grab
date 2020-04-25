@@ -36,19 +36,18 @@ public class BBCConfig implements LibraryConfig {
 
         StringBuilder builder = new StringBuilder();
 
+        builder.append('/');
+
         if (category.length() > 0 && category.length() < 64) {
             builder.append(category);
+            builder.append('/');
         }
 
-        builder.append('/');
 
         if (cdName.length() > 0) {
             builder.append(cdName);
         } else builder.append("Unknown Album");
 
-        if ( cdName.length() == 0 && cdNumber.length() > 0 ) {
-            builder.append(String.format(" (CD: %s)", cdNumber));
-        }
 
         builder.append(String.format("/%s.wav", fileName));
 

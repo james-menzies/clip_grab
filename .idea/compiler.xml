@@ -4,6 +4,8 @@
     <bytecodeTargetLevel>
       <module name="${PROJECT_NAME}.main" target="11" />
       <module name="${PROJECT_NAME}.test" target="11" />
+      <module name="AutoCompleteTextField.main" target="11" />
+      <module name="AutoCompleteTextField.test" target="11" />
       <module name="BBC.main" target="11" />
       <module name="BBC.test" target="11" />
       <module name="BBCSoundsBatchDownloa.main" target="11" />
