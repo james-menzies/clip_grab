@@ -13,6 +13,7 @@ public class DownloadTileVM {
     private ReadOnlyBooleanWrapper failed;
     private final long bytesInMb = 1_048_576;
     private ReadOnlyDoubleWrapper progress;
+    private ReadOnlyStringWrapper progressText;
 
     public ReadOnlyBooleanProperty failedProperty() {
         return failed.getReadOnlyProperty();
@@ -22,6 +23,7 @@ public class DownloadTileVM {
 
         workDone = new ReadOnlyDoubleWrapper();
         total = new ReadOnlyDoubleWrapper();
+        progressText = new ReadOnlyStringWrapper();
         workDone.bind(Bindings.divide(worker.workDoneProperty(), bytesInMb));
         total.bind(Bindings.divide(worker.totalWorkProperty(), bytesInMb));
 
@@ -30,14 +32,23 @@ public class DownloadTileVM {
         progress.bind(worker.progressProperty());
 
 
-
-
         downloadInfo = new ReadOnlyStringWrapper();
+/*
         downloadInfo.bind(Bindings.when(Bindings.and(worker.runningProperty(),
                 Bindings.lessThan(workDone, 0.0)))
                 .then(worker.messageProperty())
                 .otherwise(Bindings.format("%s (%.1fMB of %.1fMB)",
                         worker.messageProperty(), workDone, total)));
+*/
+
+
+        downloadInfo.bind(worker.messageProperty());
+
+        progressText.bind(Bindings.when(Bindings.and(worker.runningProperty(),
+                Bindings.lessThan(workDone, 0.0)))
+                .then("")
+                .otherwise(Bindings.format("(%.1fMB of %.1fMB)",
+                        workDone, total)));
 
 
         failed = new ReadOnlyBooleanWrapper(false);
@@ -59,4 +70,8 @@ public class DownloadTileVM {
         return downloadInfo.getReadOnlyProperty();
     }
 
+
+    public ReadOnlyStringWrapper progressTextProperty() {
+        return progressText;
+    }
 }

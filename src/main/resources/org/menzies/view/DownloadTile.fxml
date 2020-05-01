@@ -6,15 +6,16 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="73.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.menzies.view.DownloadTileView">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="73.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.menzies.view.DownloadTileView">
    <children>
       <Label fx:id="downloadText" text="[Download Information]" />
-      <HBox prefHeight="55.0" prefWidth="331.0">
+      <HBox prefHeight="55.0" prefWidth="331.0" spacing="5.0">
          <children>
-            <ProgressBar fx:id="progressBar" prefHeight="45.0" prefWidth="1000000.0" progress="0.0">
+            <ProgressBar fx:id="progressBar" prefHeight="36.0" prefWidth="255.0" progress="0.0" HBox.hgrow="ALWAYS">
                <padding>
-                  <Insets top="10.0" />
+                  <Insets bottom="5.0" top="5.0" />
                </padding></ProgressBar>
+            <Label fx:id="progressText" prefHeight="50.0" text="[Progress]" HBox.hgrow="NEVER" />
          </children>
       </HBox>
    </children>

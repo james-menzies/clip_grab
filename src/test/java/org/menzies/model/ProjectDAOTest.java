@@ -2,40 +2,44 @@ package org.menzies.model;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.menzies.model.library.Library;
-import org.menzies.model.pojo.Project;
-import org.menzies.model.service.parsing.FailedParseException;
+import org.menzies.model.pojo.LibraryElement;
 
-import static org.junit.Assert.*;
+import java.util.List;
 
 public class ProjectDAOTest {
 
 
     private SessionFactory factory;
+    private Session session;
+    private Transaction tx;
 
     @Before
-    public void before() throws FailedParseException {
+    public void before()  {
 
         factory = new Configuration()
                 .configure()
                 .buildSessionFactory();
 
-        Session session = factory.openSession();
+        session = factory.openSession();
+        tx = session.beginTransaction();
 
-        session.beginTransaction();
-
-
-
-        session.getTransaction().commit();
-        session.close();
     }
 
     @Test
-    public void checkBefore() {
+    public void runCustomTest() {
 
-        System.out.println("Reached test");
+
+    }
+
+
+    @After
+    public void after() {
+
+        session.close();
     }
 }

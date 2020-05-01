@@ -15,15 +15,14 @@ import java.util.concurrent.CountDownLatch;
 @Table(name = "project")
 public class Project  {
 
-/*POJO class for handling the project instances in persistence.*/
     public static final String DEFAULT = "$DEFAULT";
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
 
-    @Column(name = "library")
     @Enumerated(EnumType.STRING)
+    @Column(name = "library")
     private Library library;
 
     @Column(name = "root_directory")
@@ -35,14 +34,13 @@ public class Project  {
     @Column(name = "default_tags_used")
     private boolean defaultTagsUsed;
 
-    @OneToMany(cascade = CascadeType.ALL,
+    @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE},
             fetch = FetchType.LAZY,
             orphanRemoval = true)
     @JoinColumn(name = "project_id")
     private Set<TagTemplate> tagTemplates;
 
-    @OneToMany(cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY,
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,
             orphanRemoval = true)
     @JoinColumn(name = "project_id")
     @Fetch(FetchMode.SELECT)
@@ -70,6 +68,23 @@ public class Project  {
         this.tagTemplates = tagTemplates;
         initializeElements();
         latch = new CountDownLatch(0);
+    }
+
+    public boolean overwriteProject(String subDir, boolean defaultTags, Set<TagTemplate> tagTemplates) throws FailedParseException {
+        if (subDir == this.subDir &&
+        defaultTags == this.defaultTagsUsed &&
+        tagTemplates.equals(this.tagTemplates))   {
+            System.out.println("Project is the same");
+            return false;
+        };
+
+        this.subDir = subDir;
+        this.defaultTagsUsed = defaultTags;
+        this.tagTemplates.clear();
+        this.tagTemplates.addAll(tagTemplates);
+
+        initializeElements();
+        return true;
     }
 
     public boolean lock() {
@@ -103,6 +118,7 @@ public class Project  {
         return library;
     }
 
+
     public String getRootDir() {
         return rootDir;
     }
@@ -127,5 +143,10 @@ public class Project  {
             e.printStackTrace();
         }
         return Collections.unmodifiableSet(elements);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Library -> %s%nFolder -> %s", library, rootDir);
     }
 }

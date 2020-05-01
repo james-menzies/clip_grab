@@ -31,9 +31,7 @@ dependencies {
     implementation 'org.apache.commons:commons-csv:1.8'
 
     implementation 'org.hibernate:hibernate-core:5.4.14.Final'
-    compile 'com.h2database:h2:1.4.200'
-    compile 'org.hibernate:hibernate-c3p0:5.4.14.Final'
-    compile 'c3p0:c3p0:0.9.1.2'
+    implementation 'org.postgresql:postgresql:42.2.12'
 
     compile 'com.github.goxr3plus:jaudiotagger:2.2.7'
 }

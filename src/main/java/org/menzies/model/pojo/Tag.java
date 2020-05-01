@@ -1,34 +1,17 @@
 package org.menzies.model.pojo;
 
 import javax.persistence.*;
-
-@Entity
-@Table(name = "tag")
-public class Tag {
+import java.io.Serializable;
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private int id;
+public class Tag implements Serializable {
 
-    @Column(name = "field")
     private String field;
-
-    @Column(name = "value")
     private String value;
-
-    private Tag() {
-
-    }
 
     public Tag(String field, String value) {
         this.field = field;
         this.value = value;
-    }
-
-    public int getId() {
-        return id;
     }
 
     public String getField() {

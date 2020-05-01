@@ -45,7 +45,7 @@
                         <Insets top="5.0" />
                      </padding>
                   </GridPane>
-                  <TextArea prefHeight="213.0" prefWidth="253.0" text="This section will contain more information about&#10;the library. Probably things such as download size,&#10;amount of files in the library etc.&#10;&#10;&#10;Might also contain some info about the default &#10;configuration protocols for downloading." />
+                  <TextArea fx:id="libraryDescription" prefHeight="213.0" prefWidth="253.0" text="This section will contain more information about&#10;the library. Probably things such as download size,&#10;amount of files in the library etc.&#10;&#10;&#10;Might also contain some info about the default &#10;configuration protocols for downloading." />
                   <HBox alignment="CENTER_LEFT" spacing="10.0">
                      <children>
                         <Button disable="true" mnemonicParsing="false" text="Manual Configuration" />

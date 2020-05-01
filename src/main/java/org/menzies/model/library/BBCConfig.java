@@ -36,11 +36,11 @@ public class BBCConfig implements LibraryConfig {
 
         StringBuilder builder = new StringBuilder();
 
-        builder.append('/');
+        builder.append('\\');
 
         if (category.length() > 0 && category.length() < 64) {
             builder.append(category);
-            builder.append('/');
+            builder.append('\\');
         }
 
 
@@ -49,7 +49,7 @@ public class BBCConfig implements LibraryConfig {
         } else builder.append("Unknown Album");
 
 
-        builder.append(String.format("/%s.wav", fileName));
+        builder.append(String.format("\\%s.wav", fileName));
 
         return builder.toString();
     }

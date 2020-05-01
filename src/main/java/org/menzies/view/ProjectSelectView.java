@@ -9,6 +9,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.menzies.model.library.Library;
+import org.menzies.model.pojo.Project;
 import org.menzies.model.service.parsing.FailedParseException;
 import org.menzies.utils.JFXUtil;
 import org.menzies.viewmodel.BatchDownloadVM;
@@ -27,7 +28,7 @@ public class ProjectSelectView implements View<ProjectSelectVM> {
     private ScreenController controller;
 
     @FXML
-    private ListView savedProjects;
+    private ListView<Project> savedProjects;
 
     @FXML
     private Button chooseFolder;
@@ -47,6 +48,9 @@ public class ProjectSelectView implements View<ProjectSelectVM> {
     @FXML
     private Label chosenDirectory;
 
+    @FXML
+    private TextArea libraryDescription;
+
     public ProjectSelectView() {
 
         group = new ToggleGroup();
@@ -58,6 +62,7 @@ public class ProjectSelectView implements View<ProjectSelectVM> {
         newDownload.setToggleGroup(group);
         existingDownload.setToggleGroup(group);
         libraryChoiceBox.setItems(FXCollections.observableArrayList(Library.values()));
+        libraryDescription.setEditable(false);
     }
 
     private void initializeFailedRun() {
@@ -70,9 +75,22 @@ public class ProjectSelectView implements View<ProjectSelectVM> {
 
         this.vm = vm;
 
-        newDownload.setOnAction(e -> vm.setSelection(Selection.NEW));
-        existingDownload.setOnAction(e -> vm.setSelection(Selection.EXISTING));
-        newDownload.fire();
+        newDownload.setOnAction(e -> {
+            vm.setSelection(Selection.NEW);
+            savedProjects.setDisable(true);
+            chooseFolder.setDisable(false);
+            libraryChoiceBox.setDisable(false);
+            libraryDescription.setDisable(false);
+        });
+        existingDownload.setOnAction(e -> {
+            vm.setSelection(Selection.EXISTING);
+            savedProjects.setDisable(false);
+            chooseFolder.setDisable(true);
+            libraryChoiceBox.setDisable(true);
+            libraryDescription.setDisable(true);
+
+        });
+        savedProjects.setItems(vm.savedProjectsProperty());
 
         runButton.setOnAction(e -> onRunAction());
 
@@ -89,7 +107,19 @@ public class ProjectSelectView implements View<ProjectSelectVM> {
             vm.selectedRootDirProperty().set(selection);
         });
 
+
         vm.selectedLibraryProperty().bind(libraryChoiceBox.valueProperty());
+        vm.existingSelectionProperty().bind(savedProjects.getSelectionModel().selectedItemProperty());
+
+        if (savedProjects.getItems().size() > 0) {
+            existingDownload.fire();
+            savedProjects.getSelectionModel().select(0);
+        }
+        else {
+            newDownload.fire();
+            libraryChoiceBox.getSelectionModel().select(0);
+        }
+
     }
 
     @Override

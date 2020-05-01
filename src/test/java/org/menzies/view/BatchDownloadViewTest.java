@@ -30,23 +30,16 @@ public class BatchDownloadViewTest  {
         workers = new ArrayList<>();
         workers.addAll(AutomaticDummyWorkerFactory.get(50000));
 
-        service = new ThreadPoolExecutor(5, 5, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
-                                                    new ThreadPoolExecutor.DiscardPolicy()) {
-            @Override
-            public void shutdown() {
-                super.shutdown();
-                getQueue().clear();
-            }
-        };
     }
 
-//    @Ignore
-  /*  @Test
-*//*    @TestInJfxThread
+   // @Ignore
+    @Test
+    @TestInJfxThread
     public void demo() throws IOException {
 
-        var viewModel = new BatchDownloadVM(service, workers);
-        Parent root = JFXUtil.getRoot(viewModel, "/BatchDownload.fxml");
+        var viewModel = new BatchDownloadVM(workers);
+        viewModel.setDownloadTotal(51000);
+        Parent root = JFXUtil.getRoot(viewModel, "/org/menzies/view/BatchDownload.fxml");
         JFXUtil.createStage(root).showAndWait();
-    }*/
+    }
 }

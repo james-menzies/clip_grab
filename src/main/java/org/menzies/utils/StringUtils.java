@@ -28,4 +28,16 @@ public class StringUtils {
 
         return matcher.group();
     }
+
+    public static String shorten(String string, int length) {
+
+        if (string.length() > length) {
+            int segmentLength = length / 2;
+
+            return string.substring(0, segmentLength -1) + "..."
+                    + string.substring(string.length() - segmentLength - 1);
+
+        }
+        else return string;
+    }
 }

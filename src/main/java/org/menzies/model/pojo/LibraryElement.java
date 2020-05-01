@@ -6,6 +6,8 @@ import org.menzies.model.service.tagging.Taggable;
 import javax.persistence.*;
 import java.io.File;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Set;
 
 
@@ -27,9 +29,10 @@ public class LibraryElement implements Taggable, Downloadable {
     @Column(name = "file", length = 511)
     private String file;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "library_element_id")
-    private Set<Tag> tags;
+
+    @Lob
+    @Column(name = "tags")
+    private Tag[] tags;
 
     @Override
     public boolean isCompleted() {
@@ -40,6 +43,7 @@ public class LibraryElement implements Taggable, Downloadable {
     public void setCompleted(boolean completed) {
         this.completed = completed;
     }
+
 
     @Override
     public URL getSource() {
@@ -53,7 +57,7 @@ public class LibraryElement implements Taggable, Downloadable {
 
     @Override
     public Set<Tag> getTags() {
-        return tags;
+        return Set.of(tags);
     }
 
     protected LibraryElement() {
@@ -63,10 +67,10 @@ public class LibraryElement implements Taggable, Downloadable {
     @Override
     public String toString() {
         return String.format("Lib Element - Source: %s%n FileLoc: %s%n %s%n%n", source.toExternalForm(),
-                file, tags.toString());
+                file, Arrays.toString(tags));
     }
 
-    private LibraryElement(boolean completed, URL source, String file, Set<Tag> tags) {
+    private LibraryElement(boolean completed, URL source, String file, Tag[] tags) {
         this.completed = completed;
         this.source = source;
         this.file = file;
@@ -77,7 +81,7 @@ public class LibraryElement implements Taggable, Downloadable {
         private boolean completed;
         private URL source;
         private String file;
-        private Set<Tag> tags;
+        private Tag[] tags;
 
         public Builder() {
 
@@ -99,12 +103,11 @@ public class LibraryElement implements Taggable, Downloadable {
             return this;
         }
 
-        public Builder setTags(Set<Tag> tags) {
+        public Builder setTags(Collection<Tag> tags) {
 
-            this.tags = tags;
+            this.tags = tags.toArray(new Tag[0]);
             return this;
         }
-
 
         public LibraryElement build()
             throws IllegalStateException {

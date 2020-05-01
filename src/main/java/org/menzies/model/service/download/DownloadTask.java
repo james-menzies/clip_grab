@@ -1,6 +1,7 @@
 package org.menzies.model.service.download;
 
 import javafx.concurrent.Task;
+import org.menzies.utils.StringUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,7 +12,9 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
@@ -19,10 +22,11 @@ import java.util.function.Consumer;
 public class DownloadTask extends Task<File> {
 
     private File file;
+    private String displayFile;
     private final URL downloadLocation;
     private final CountDownLatch latch;
     private boolean failTask;
-    private final List<Consumer<File>> postDownloadTasks;
+    private final Map<Consumer<File>, String> postDownloadTasks;
     private URLConnection conn;
     private ReadableByteChannel inputChannel;
     private FileChannel outputChannel;
@@ -30,9 +34,11 @@ public class DownloadTask extends Task<File> {
 
     public DownloadTask(Downloadable downloadable) {
 
+
         file = downloadable.getFile();
+        displayFile = StringUtils.shorten(file.getName(), 50);
         downloadLocation = downloadable.getSource();
-        postDownloadTasks = new ArrayList<>();
+        postDownloadTasks = new LinkedHashMap<>();
         latch = new CountDownLatch(2);
     }
 
@@ -40,7 +46,7 @@ public class DownloadTask extends Task<File> {
     @Override
     protected File call() throws Exception {
         //TODO Refactor method into smaller pieces
-        updateMessage("Initializing: " + file.getName());
+        updateMessage("Initializing: " + displayFile);
 
         Thread fileThread = new Thread(this::initializeFile);
         fileThread.start();
@@ -57,7 +63,7 @@ public class DownloadTask extends Task<File> {
         long currentIndex = 0;
         long packetSize = 1024;
 
-        updateMessage(String.format("Downloading: %s", file.getName()));
+        updateMessage(String.format("Downloading: %s", displayFile));
         while (currentIndex < totalSize) {
 
             outputChannel.transferFrom(inputChannel, currentIndex, packetSize);
@@ -66,21 +72,25 @@ public class DownloadTask extends Task<File> {
             currentIndex += packetSize;
         }
 
-        for (Consumer<File> operation : postDownloadTasks) {
 
-            operation.accept(file);
+        for (Consumer<File> operation : postDownloadTasks.keySet()) {
+
+            String message = postDownloadTasks.get(operation);
+
+            try {
+                updateMessage(message);
+                operation.accept(file);
+            } catch (Exception e) {
+                updateMessage(String.format("Download of %s failed during phase: %s", displayFile, message));
+                failTask = true;
+                throw new Exception();
+            }
         }
 
         inputChannel.close();
         outputChannel.close();
 
-        updateMessage("Performing post download tasks...");
-
-        for (Consumer<File> task : postDownloadTasks) {
-            task.accept(file);
-        }
-
-        updateMessage(String.format("Downloaded %s", file.getName()));
+        updateMessage(String.format("Downloaded %s", displayFile));
         return file;
     }
 
@@ -90,14 +100,14 @@ public class DownloadTask extends Task<File> {
         try {
             conn = downloadLocation.openConnection();
         } catch (IOException | IllegalArgumentException e) {
-            updateMessage(String.format("Download of %s failed. Invalid URL.", file.getName()));
+            updateMessage(String.format("Download of %s failed. Invalid URL.", displayFile));
             failTask = true;
         }
 
         try {
             inputChannel = Channels.newChannel(conn.getInputStream());
         } catch (IOException e) {
-            updateMessage(String.format("Download of %s failed. Could not find website.", file.getName()));
+            updateMessage(String.format("Download of %s failed. Could not find website.", displayFile));
             failTask = true;
         } finally {
             latch.countDown();
@@ -118,7 +128,7 @@ public class DownloadTask extends Task<File> {
             outputChannel = new FileOutputStream(file).getChannel();
 
         } catch (IOException e) {
-            updateMessage(String.format("Download of %s failed. Could not create file.", file.getName()));
+            updateMessage(String.format("Download of %s failed. Could not create file.", displayFile));
             e.printStackTrace();
             failTask = true;
         } finally {
@@ -126,30 +136,19 @@ public class DownloadTask extends Task<File> {
         }
     }
 
-    public void addPostDownloadTask(Consumer<File> task) {
+    public void addPostDownloadTask(Consumer<File> task, String desc) {
 
-        postDownloadTasks.add(task);
+        postDownloadTasks.put(task, desc);
     }
 
     @Override
     protected void failed() {
-
-
-        if (!failTask) {
-
-            updateMessage("Download Cancelled");
-        }
         super.failed();
-        file.delete();
-
-        // TODO: 24/04/2020 Make sure this won't delete everything before inclusion!
-//
-//        File parent = file.getParentFile();
-//        while (parent.isDirectory() && parent.list().length == 0) {
-//            parent.delete();
-//            parent = parent.getParentFile();
-//        }
+        if (!failTask) {
+            updateMessage(String.format("Download of %s was cancelled.", displayFile));
+        }
     }
+
 
     //Standard overrides and getters
 
@@ -163,7 +162,7 @@ public class DownloadTask extends Task<File> {
     }
 
     public String getFileName() {
-        return file.getName();
+        return displayFile;
     }
 
     @Override

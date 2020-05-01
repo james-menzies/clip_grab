@@ -17,6 +17,9 @@ public class DownloadTileView implements View<DownloadTileVM> {
     @FXML
     Label downloadText;
 
+    @FXML
+    Label progressText;
+
 
 
     @Override
@@ -38,6 +41,7 @@ public class DownloadTileView implements View<DownloadTileVM> {
                 progressBar.setStyle("-fx-accent: red;");
             }
         });
+        progressText.textProperty().bind(viewModel.progressTextProperty());
     }
 
 
