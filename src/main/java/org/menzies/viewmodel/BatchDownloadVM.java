@@ -9,6 +9,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
 import javafx.util.Callback;
 
 import java.util.Collection;
@@ -51,14 +53,14 @@ public class BatchDownloadVM<T extends Task<?>> {
         runningViewModels = FXCollections.observableArrayList();
         taskToVMReference = new HashMap<>();
 
-        downloadTotal = new ReadOnlyIntegerWrapper(0);
+        downloadTotal = new ReadOnlyIntegerWrapper(tasks.size());
         completedTotal = new ReadOnlyIntegerWrapper(0);
         failedTotal = new ReadOnlyIntegerWrapper(0);
 
         remainingTotal = Bindings.createIntegerBinding( () -> {
 
-            return tasks.size() - completedTotal.get() - failedTotal.get();
-        }, completedTotal, failedTotal);
+            return downloadTotal.get() - completedTotal.get() - failedTotal.get();
+        }, downloadTotal, completedTotal, failedTotal);
 
         startDisabled = new ReadOnlyBooleanWrapper(false);
         shutDownDisabled = new ReadOnlyBooleanWrapper(true);
@@ -87,12 +89,15 @@ public class BatchDownloadVM<T extends Task<?>> {
 
     public void setDownloadTotal(int downloadTotal) {
         if (!running.get()) {
+
+            int tasksRemaining = this.downloadTotal.get();
             this.downloadTotal.set(downloadTotal);
-            completedTotal.set(downloadTotal - remainingTotal.get());
+            completedTotal.set(downloadTotal - tasksRemaining);
         } else System.out.println("Cannot change total. Download already started.");
     }
 
     public void handleStart()  {
+
         running.set(true);
         startDisabled.set(true);
         shutDownDisabled.set(false);
@@ -121,10 +126,21 @@ public class BatchDownloadVM<T extends Task<?>> {
     }
 
     private void configureTask(T task) {
+        EventHandler<WorkerStateEvent> succeeded = task.getOnSucceeded();
+        EventHandler<WorkerStateEvent> failed = task.getOnFailed();
+        EventHandler<WorkerStateEvent> running = task.getOnRunning();
+        EventHandler<WorkerStateEvent> cancelled = task.getOnCancelled();
 
-            task.setOnRunning(e -> createViewModel(task));
-            task.setOnFailed(e -> cleanUpTask(task, false));
-            task.setOnSucceeded(e -> cleanUpTask(task, true));
+        task.setOnRunning(e -> createViewModel(task));
+        task.setOnFailed(e -> cleanUpTask(task, false));
+
+
+
+
+            task.setOnSucceeded(e -> {
+                succeeded.handle(e);
+                cleanUpTask(task, true);
+            });
             task.setOnCancelled(e -> cleanUpTask(task, false));
     }
 

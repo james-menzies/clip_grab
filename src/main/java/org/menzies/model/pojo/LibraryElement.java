@@ -29,6 +29,11 @@ public class LibraryElement implements Taggable, Downloadable {
     @Column(name = "file", length = 511)
     private String file;
 
+    @Column(name = "file_offset")
+    private int fileOffset;
+
+    @Column(name = "file_ext")
+    private String fileExt;
 
     @Lob
     @Column(name = "tags")
@@ -52,7 +57,10 @@ public class LibraryElement implements Taggable, Downloadable {
 
     @Override
     public File getFile() {
-        return new File(file);
+
+        String suffix = fileOffset > 0 ? String.format(" (%d)", fileOffset) : "";
+
+        return new File(file + suffix + fileExt);
     }
 
     @Override
@@ -64,17 +72,31 @@ public class LibraryElement implements Taggable, Downloadable {
 
     }
 
+    public int getFileOffset() {
+        return fileOffset;
+    }
+
+    public String getFileExt() {
+        return fileExt;
+    }
+
+    public void setFileOffset(int fileOffset) {
+        this.fileOffset = fileOffset;
+    }
+
     @Override
     public String toString() {
         return String.format("Lib Element - Source: %s%n FileLoc: %s%n %s%n%n", source.toExternalForm(),
                 file, Arrays.toString(tags));
     }
 
-    private LibraryElement(boolean completed, URL source, String file, Tag[] tags) {
+    private LibraryElement(boolean completed, URL source, String file, Tag[] tags, String fileExt) {
         this.completed = completed;
         this.source = source;
         this.file = file;
         this.tags = tags;
+        fileOffset = 0;
+        this.fileExt = fileExt;
     }
 
     public static class Builder {
@@ -82,6 +104,7 @@ public class LibraryElement implements Taggable, Downloadable {
         private URL source;
         private String file;
         private Tag[] tags;
+        private String fileExt;
 
         public Builder() {
 
@@ -103,6 +126,11 @@ public class LibraryElement implements Taggable, Downloadable {
             return this;
         }
 
+        public Builder setFileExt(String fileExt) {
+            this.fileExt = fileExt;
+            return this;
+        }
+
         public Builder setTags(Collection<Tag> tags) {
 
             this.tags = tags.toArray(new Tag[0]);
@@ -112,11 +140,11 @@ public class LibraryElement implements Taggable, Downloadable {
         public LibraryElement build()
             throws IllegalStateException {
 
-            if (file == null || source == null || tags == null) {
+            if (file == null || source == null || tags == null || fileExt == null ) {
                 throw new IllegalStateException("Source and/or file " +
                         "not initialized in Library Element Builder.");
             }
-            return new LibraryElement(completed, source, file, tags);
+            return new LibraryElement(completed, source, file, tags, fileExt);
         }
     }
 }

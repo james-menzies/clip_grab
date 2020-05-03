@@ -147,6 +147,12 @@ public class DownloadTask extends Task<File> {
         if (!failTask) {
             updateMessage(String.format("Download of %s was cancelled.", displayFile));
         }
+
+
+        if (file.delete()) {
+            System.out.println(String.format("Partial file %s was deleted.", displayFile));
+        }
+        else System.out.println(String.format("Unable to delete partial file %s", displayFile));
     }
 
 

@@ -49,7 +49,7 @@ public class BBCConfig implements LibraryConfig {
         } else builder.append("Unknown Album");
 
 
-        builder.append(String.format("\\%s.wav", fileName));
+        builder.append(String.format("\\%s", fileName));
 
         return builder.toString();
     }
@@ -73,5 +73,19 @@ public class BBCConfig implements LibraryConfig {
     public String[] getHeaders() {
         return new String[] {"LOCATION", "DESCRIPTION", "SECONDS", "CATEGORY",
                            "CD_NUMBER", "CD_NAME", "TRACK_NO"};
+    }
+
+    @Override
+    public String getDescription() {
+        return "These 16,000 BBC Sound Effects are made available by the BBC in WAV format to download " +
+                "for use under the terms of the RemArc Licence. The Sound Effects are BBC copyright," +
+                " but they may be used for personal, educational or research purposes, as detailed " +
+                "in the license.\n\n" +
+                "Approximate size of download is 285 GB.";
+    }
+
+    @Override
+    public String getFileExt() {
+        return ".wav";
     }
 }

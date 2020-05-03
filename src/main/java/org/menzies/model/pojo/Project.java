@@ -40,11 +40,9 @@ public class Project  {
     @JoinColumn(name = "project_id")
     private Set<TagTemplate> tagTemplates;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,
+    @OneToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY,
             orphanRemoval = true)
     @JoinColumn(name = "project_id")
-    @Fetch(FetchMode.SELECT)
-    @BatchSize(size = 10)
     private Set<LibraryElement> elements;
 
     @Transient

@@ -14,5 +14,8 @@ public interface LibraryConfig {
     Set<Tag> getDefaultTags(CSVRecord record);
     String [] getHeaders();
 
+    String getDescription();
+
+    String getFileExt();
 
     }

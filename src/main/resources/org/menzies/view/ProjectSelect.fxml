@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="433.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.menzies.view.ProjectSelectView">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="475.0" prefWidth="594.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.menzies.view.ProjectSelectView">
    <left>
       <BorderPane BorderPane.alignment="CENTER">
          <center>
@@ -61,27 +61,28 @@
       </BorderPane>
    </left>
    <bottom>
-      <ButtonBar prefHeight="40.0" prefWidth="570.0" BorderPane.alignment="CENTER">
+      <ButtonBar prefHeight="38.0" prefWidth="570.0" BorderPane.alignment="CENTER">
         <buttons>
           <Button fx:id="runButton" mnemonicParsing="false" text="Run" />
         </buttons>
       </ButtonBar>
    </bottom>
    <center>
-      <VBox prefHeight="200.0" prefWidth="100.0" spacing="15.0" BorderPane.alignment="CENTER">
+      <VBox prefHeight="472.0" prefWidth="269.0" spacing="15.0" BorderPane.alignment="CENTER">
          <children>
             <RadioButton fx:id="existingDownload" mnemonicParsing="false" text="Continue Existing Download">
                <padding>
                   <Insets bottom="20.0" />
                </padding>
             </RadioButton>
-            <ListView fx:id="savedProjects" prefHeight="274.0" prefWidth="269.0" />
+            <ListView fx:id="savedProjects" prefHeight="273.0" prefWidth="263.0" />
             <HBox alignment="CENTER_LEFT" spacing="10.0">
                <children>
                   <Button disable="true" mnemonicParsing="false" text="Reconfigure Project" />
                   <Label text="(Not yet available)" />
                </children>
             </HBox>
+            <Button fx:id="deleteProject" mnemonicParsing="false" prefHeight="25.0" prefWidth="339.0" text="Delete Selected Project" />
          </children>
       </VBox>
    </center>

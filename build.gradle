@@ -3,7 +3,7 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
-version = '0.0.1-SNAPSHOT'
+version = '1.0'
 
 sourceCompatibility = 11
 targetCompatibility = 11
@@ -17,21 +17,20 @@ repositories {
 
 }
 
-mainClassName = 'MainApp'
+mainClassName = 'org.menzies.MainApp'
 
 javafx {
-    version = '11.0.1'
+    version = '12'
     modules = [ 'javafx.controls', 'javafx.fxml']
 }
 
 
 dependencies {
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'de.saxsys:jfx-testrunner:1.2'
     implementation 'org.apache.commons:commons-csv:1.8'
-
     implementation 'org.hibernate:hibernate-core:5.4.14.Final'
-    implementation 'org.postgresql:postgresql:42.2.12'
-
-    compile 'com.github.goxr3plus:jaudiotagger:2.2.7'
+    implementation 'com.github.goxr3plus:jaudiotagger:2.2.7'
+    implementation 'com.h2database:h2:1.4.200'
+    testImplementation 'de.saxsys:jfx-testrunner:1.2'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.postgresql:postgresql:42.2.12'
 }
