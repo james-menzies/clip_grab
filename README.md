@@ -1,0 +1,15 @@
+# clipgrab
+
+This is an old passion project where I wanted to facilitate the scraping of sound effect libraries off websites for a friend. The idea of the program was that it would accept a manifest in the form of a CSV file, and manage the download of an entire library. As a starting point, I managed to scrape a manifest from the site my friend was interested in, the BBC sound effect library which contained over 16,000 individual files.
+
+I wrote this project in Java and JavaFX, and used JPA/Hibernate to persist data in between download sessions.
+
+There were many elements of success in this project, especially in regards to the handling of memory and multithreading, and am very proud of the achievement. This is especially the case given it was achieved with no formal education in software engineering.
+
+However, there are some foundational critical problems in the code base which prevent the project from reaching its intended capability. Rather than delete it, I've chosen to keep it here, as I'm sure there are many good lessons I can extract from it.
+
+If you're interested, here are some shower thoughts I have about the project. If I were to re-start this project from scratch, I would:
+
+* Using a database to persist data was a bad design choice. This is completely overkill, and I can only imagine the reason I bothered to do so in the first place was that I was eager to include a database in the project. Instead, I should have just stored the CSV manifest of downloads in a file in the user's home directory, alongside a master record of all sessions in a separate file alongside it. This would have vastly reduced complexity and improved performance.
+* Using Hibernate and JavaFX in the same project is a *terrible* idea. Hibernate is a backend framework whilst JavaFX is frontend, and there is no documentation in existance on how you should get the two to work together. If the project **truly** required a database, then more effort needs to be made to make sure that there is a clear separation between the persistence layer and the front end layer. This project tried to 'merge' model classes between the two concerns, meaning that JavaFX property bindings where attached to table definitions in Hiberante. This basically just equalled a bad time for all concerned.
+* I need to 'rethink' architecture in JavaFX applications in general. Traditionally, I've been obsessed with the mindset of MVC, MVP, and all the other architectures you could imagine that conceivably exist in the universe. I was also really obsessed with keeping application state 'encapsulated' from other parts of the application. If I had my time over, I would probably try to borrow a leaf from the React/Redux philosophy, where I would attempt to have a singleton class which contained the entire application state. I would then make it globally accessible throughout the application. Then, my controller classes would be responsible for managing child components, initializing the bindings and updating the state. My view classes would be simple fxml files and would be externally generated.
